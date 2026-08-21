@@ -1,0 +1,231 @@
+{
+  "auxiliary_fan": "1",
+  "bed_exclude_area": [
+    "0x0"
+  ],
+  "bed_mesh_max": "267,267",
+  "bed_mesh_min": "3,3",
+  "bed_model": "Snapmaker U1_bed.stl",
+  "bed_texture": "Snapmaker U1_bed.svg",
+  "before_layer_change_gcode": ";BEFORE_LAYER_CHANGE\n;[layer_z]\nG92 E0\nTIMELAPSE_TAKE_FRAME\nDEFECT_DETECTION_DETECT",
+  "change_filament_gcode": ";===== Mnemonic3d - MULTIACE MOD =====================\n; Change Tool[previous_extruder] -> Tool[next_extruder] (layer [layer_num])\n\nM400\n\nT[next_extruder]\n\n{if layer_num == 0}\nM109 S{first_layer_temperature[next_extruder]}\n{else}\nM109 S{temperature[next_extruder]}\n{endif}\n\n{if filament_type[next_extruder] == \"PVA\"}\nSET_VELOCITY_LIMIT ACCEL=3000\n{else}\nSET_VELOCITY_LIMIT ACCEL=10000\n{endif}\n\n{if previous_extruder != next_extruder}\nSM_PRINT_PREEXTRUDE_FILAMENT INDEX=[next_extruder]\n{endif}\n\nM400\nG90",
+  "default_bed_type": "Textured PEI Plate",
+  "default_filament_profile": [
+    "Snapmaker PLA"
+  ],
+  "default_nozzle_volume_type": [
+    "Standard"
+  ],
+  "default_print_profile": "0.40 Standard @Snapmaker U1 (0.8 nozzle)",
+  "deretraction_speed": [
+    "35"
+  ],
+  "enable_filament_ramming": "1",
+  "extruder_clearance_height_to_lid": "140",
+  "extruder_clearance_height_to_rod": "27.5",
+  "extruder_clearance_radius": "72.5",
+  "extruder_colour": [
+    "#FCE94F"
+  ],
+  "extruder_offset": [
+    "0x0"
+  ],
+  "extruder_printable_height": [
+    "0"
+  ],
+  "extruder_type": [
+    "Direct Drive"
+  ],
+  "extruder_variant_list": [
+    "Direct Drive Standard"
+  ],
+  "from": "system",
+  "gcode_flavor": "klipper",
+  "host_type": "octoprint",
+  "inherits": "fdm_U1",
+  "instantiation": "true",
+  "layer_change_gcode": ";AFTER_LAYER_CHANGE\n;[layer_z]\nSET_PRINT_STATS_INFO TOTAL_LAYER={total_layer_count}\nSET_PRINT_STATS_INFO CURRENT_LAYER={layer_num+1}",
+  "long_retractions_when_cut": [
+    "0"
+  ],
+  "machine_end_gcode": ";===== Mnemonic3d - MULTIACE MOD =====================\nPRINT_END\nTIMELAPSE_STOP",
+  "machine_load_filament_time": "90",
+  "machine_max_acceleration_e": [
+    "5000",
+    "5000"
+  ],
+  "machine_max_acceleration_extruding": [
+    "25000",
+    "25000"
+  ],
+  "machine_max_acceleration_retracting": [
+    "5000",
+    "5000"
+  ],
+  "machine_max_acceleration_travel": [
+    "25000",
+    "25000"
+  ],
+  "machine_max_acceleration_x": [
+    "25000",
+    "25000"
+  ],
+  "machine_max_acceleration_y": [
+    "25000",
+    "25000"
+  ],
+  "machine_max_acceleration_z": [
+    "500",
+    "200"
+  ],
+  "machine_max_jerk_e": [
+    "2.5",
+    "2.5"
+  ],
+  "machine_max_jerk_x": [
+    "9",
+    "9"
+  ],
+  "machine_max_jerk_y": [
+    "9",
+    "9"
+  ],
+  "machine_max_jerk_z": [
+    "3",
+    "0.4"
+  ],
+  "machine_max_speed_e": [
+    "30",
+    "25"
+  ],
+  "machine_max_speed_x": [
+    "1000",
+    "200"
+  ],
+  "machine_max_speed_y": [
+    "1000",
+    "200"
+  ],
+  "machine_max_speed_z": [
+    "20",
+    "12"
+  ],
+  "machine_min_extruding_rate": [
+    "0",
+    "0"
+  ],
+  "machine_min_travel_rate": [
+    "0",
+    "0"
+  ],
+  "machine_pause_gcode": "M600",
+  "machine_start_gcode": "SET_PRINT_AUTO_BED_LEVELING ENABLE=1\nSET_TIME_LAPSE_CAMERA ENABLE=1\n;===== Mnemonic3d - MULTIACE MOD =====================\n\nPRINT_START\nDEFECT_DETECTION_START\nSET_PRINT_STATS_INFO TOTAL_LAYER={total_layer_count}\nSET_PRINT_STATS_INFO CURRENT_LAYER=0\nTIMELAPSE_START\n\n;===== Initial heating ========\nM140 S{bed_temperature_initial_layer_single}\nM104 T{initial_extruder} S150\nM204 S10000\n\n;===== XY homing ========\nG28 X Y\n\n;===== Bed foreign-object detection ========\nT{initial_extruder}\nG90\nDEFECT_DETECTION_DETECT_BED\n\n;===== Toolhead pickup/drop detection ========\nSM_PRINT_CHECK_SWITCH_EXTRUDER\n\n;===========================================================\n; MultiACE FILAMENT CONTROL\n;\n; SM_PRINT_AUTO_FEED intentionally removed.\n; SM_PRINT_FLOW_CALIBRATE intentionally removed.\n; SM_PRINT_EXTRUDER_PREHEAT intentionally removed.\n;\n; MultiACE Web Preflight handles the required ACE/head/slot\n; loading before the starting-line section.\n;\n; The active nozzle remains at or above 150C throughout\n; startup, cleaning, homing, and bed leveling.\n;===========================================================\n\n;===== Prepare active nozzle ========\nT{initial_extruder}\nM104 T{initial_extruder} S{max(nozzle_temperature[initial_extruder] - 90, 150)}\n\n;===== Rough homing ========\nM106 S255\nM106 P2 S0\n\nMOVE_TO_DISCARD_FILAMENT_POSITION\n\nM109 T{initial_extruder} S{max(nozzle_temperature[initial_extruder] - 70, 150)}\n\nROUGHLY_CLEAN_NOZZLE_WITH_DISCARD\nMOVE_TO_XY_IDLE_POSITION_EXTRUDER\n\nG28 Z I140 J140\n\n;===== Build plate detection ========\nDETECT_BED_PLATE\n\n;===== Deep nozzle cleaning ========\nG90\nG0 Z5 F10000\n\nMOVE_TO_DISCARD_FILAMENT_POSITION\n\nM109 T{initial_extruder} S{max(nozzle_temperature[initial_extruder] - 50, 150)}\n\nROUGHLY_CLEAN_NOZZLE\nMOVE_TO_XY_IDLE_POSITION_EXTRUDER\nFINELY_CLEAN_NOZZLE_STAGE_1\n\nM104 T{initial_extruder} S{max(nozzle_temperature[initial_extruder] - 90, 150)}\n\nG0 Z5 F10000\nMOVE_TO_DISCARD_FILAMENT_POSITION\n\nROUGHLY_CLEAN_NOZZLE\nMOVE_TO_XY_IDLE_POSITION_EXTRUDER\nFINELY_CLEAN_NOZZLE_STAGE_2\n\n;===== Final nozzle wipe before precision homing ========\nG90\nG0 Z5 F10000\n\nMOVE_TO_DISCARD_FILAMENT_POSITION\nROUGHLY_CLEAN_NOZZLE\n\nMOVE_TO_XY_IDLE_POSITION_EXTRUDER\n\n;===== Precision homing ========\nM106 S255\n\nM109 T{initial_extruder} S{max(nozzle_temperature[initial_extruder] - 90, 150)}\n\nM190 S{bed_temperature_initial_layer_single}\n\nM107 P2\n\nG90\nG0 Z5 F10000\n\nG28 Z\n\n;===== Bed leveling ========\nBED_MESH_CALIBRATE mesh_min={adaptive_bed_mesh_min[0]},{adaptive_bed_mesh_min[1]} mesh_max={adaptive_bed_mesh_max[0]},{adaptive_bed_mesh_max[1]} ALGORITHM=[bed_mesh_algo] PROBE_COUNT={bed_mesh_probe_count[0]},{bed_mesh_probe_count[1]} ADAPTIVE=0 ADAPTIVE_MARGIN=0\n\n;===== Draw the starting line ========\n; MultiACE Web Preflight inserts the required initial\n; ACE/head/slot load immediately before this section.\n\nG90\nG1 Z1.5\nG0 X10 Y3 Z2 F18000\n\n;===== Heat mapped printing tool to actual first-layer temp ========\nT{initial_extruder}\nM109 T{initial_extruder} S{nozzle_temperature_initial_layer[initial_extruder]}\n\n;===== Purge line ========\nG1 Z0.2\nM83\nG1 X110 E15 F360\nG1 Z1.5\n\n;===== Start print ========\nG90\nM106 S0",
+  "machine_tool_change_time": "5",
+  "machine_unload_filament_time": "30",
+  "max_layer_height": [
+    "0.56"
+  ],
+  "max_resonance_avoidance_speed": "90",
+  "min_layer_height": [
+    "0.16"
+  ],
+  "min_resonance_avoidance_speed": "40",
+  "name": "Snapmaker U1 MultiACE (0.8 nozzle)",
+  "nozzle_diameter": [
+    "0.8"
+  ],
+  "nozzle_flush_dataset": [
+    "0"
+  ],
+  "nozzle_type": "hardened_steel",
+  "nozzle_volume": [
+    "143"
+  ],
+  "printable_area": [
+    "0.5x1",
+    "270.5x1",
+    "270.5x271",
+    "0.5x271"
+  ],
+  "printable_height": "270.05",
+  "printer_agent": "snapmaker",
+  "printer_extruder_id": [
+    "1"
+  ],
+  "printer_extruder_variant": [
+    "Direct Drive Standard"
+  ],
+  "printer_model": "Snapmaker U1 MultiACE",
+  "printer_notes": "",
+  "printer_settings_id": "Snapmaker U1 MultiACE (0.8 nozzle)",
+  "printer_technology": "FFF",
+  "printer_variant": "0.8",
+  "purge_in_prime_tower": "0",
+  "ramming_pressure_advance_value": "0.02",
+  "resonance_avoidance": "1",
+  "retract_before_wipe": [
+    "0%"
+  ],
+  "retract_length_toolchange": [
+    "10"
+  ],
+  "retract_lift_above": [
+    "0"
+  ],
+  "retract_lift_below": [
+    "269"
+  ],
+  "retract_lift_enforce": [
+    "All Surfaces"
+  ],
+  "retract_restart_extra": [
+    "0"
+  ],
+  "retract_restart_extra_toolchange": [
+    "0"
+  ],
+  "retract_when_changing_layer": [
+    "1"
+  ],
+  "retraction_distances_when_cut": [
+    "18"
+  ],
+  "retraction_length": [
+    "0.8"
+  ],
+  "retraction_minimum_travel": [
+    "1"
+  ],
+  "retraction_speed": [
+    "40"
+  ],
+  "scan_first_layer": "0",
+  "setting_id": "MNEMONIC3D_U1_MULTIACE_08",
+  "silent_mode": "0",
+  "single_extruder_multi_material": "1",
+  "thumbnails": "48x48/PNG, 300x300/PNG",
+  "tool_change_temprature_wait": "0",
+  "travel_slope": [
+    "3"
+  ],
+  "type": "machine",
+  "version": "2.4.0.7",
+  "wipe": [
+    "1"
+  ],
+  "wipe_distance": [
+    "2"
+  ],
+  "z_hop": [
+    "0.4"
+  ],
+  "z_hop_types": [
+    "Auto Lift"
+  ],
+  "z_hop_when_prime": [
+    "0",
+    "0",
+    "0",
+    "0"
+  ]
+}
