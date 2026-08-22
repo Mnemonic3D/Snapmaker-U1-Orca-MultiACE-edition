@@ -94,3 +94,22 @@ Thanks and credit to the developers and contributors whose work made this projec
 This build is based on and extends their work, bringing these projects together into a more integrated Snapmaker U1 MultiACE workflow.
 
 This repository itself is a standalone (non-fork) publish of [Mnemonic3D/Snapmaker-U1-MultiACE-edition](https://github.com/Mnemonic3D/Snapmaker-U1-MultiACE-edition), pushed here directly rather than as a GitHub fork because of a persistent GitHub fork-network object storage issue that blocked pushes to the fork itself. Full commit history and authorship live at the fork above.
+
+## Acknowledgments
+
+<p align="left">
+  <a href="https://claude.ai"><img src="https://img.shields.io/badge/Made%20with-Claude-D97757?logo=claude&logoColor=white" alt="Made with Claude"></a>
+  <a href="https://openai.com/chatgpt"><img src="https://img.shields.io/badge/Made%20with-ChatGPT-74AA9C?logo=openai&logoColor=white" alt="Made with ChatGPT"></a>
+  <a href="https://www.klipper3d.org"><img src="https://img.shields.io/badge/Firmware-Klipper-FF7F32" alt="Klipper"></a>
+  <a href="https://reprap.org/wiki/G-code"><img src="https://img.shields.io/badge/G--code-Community-4C8BF5" alt="G-code Community"></a>
+</p>
+
+Development of this build was assisted by AI coding tools — **Claude** (Anthropic) and **ChatGPT** (OpenAI) — used throughout for debugging the MultiACE synchronization logic, refactoring the OrcaSlicer integration code, and drafting project documentation. The G-code handling in this build also owes a debt to the broader open-source firmware community, in particular the **Klipper** project, whose macro system and documentation informed how MultiACE-aware start and filament-change G-code is structured here, and to the wider community of G-code contributors and toolchain authors whose conventions this project builds on.
+
+## License
+
+This project is licensed under the **[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)**.
+
+In plain terms: anyone is free to use, fork, modify, and redistribute this code, including for commercial purposes, as long as they keep it open source under the same license. The one condition that goes beyond a standard GPL license is the "network use" clause — if someone runs a modified version of this software as a service over a network (for example, a hosted build server), they're required to make that modified source code available to the people using the service, not just to people who receive a copy of the binary.
+
+This summary is provided for convenience only and isn't legal advice — the [full license text](LICENSE) is what governs actual use of this project.
