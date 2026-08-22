@@ -97,6 +97,18 @@ This repository itself is a standalone (non-fork) publish of [Mnemonic3D/Snapmak
 
 ## Acknowledgments
 
+## Build Tools
+
+<p align="left">
+  <a href="https://visualstudio.microsoft.com/"><img src="https://img.shields.io/badge/Compiler-Visual%20Studio%20%2F%20MSBuild-5C2D91?logo=visualstudio&logoColor=white" alt="Visual Studio / MSBuild"></a>
+  <a href="https://cmake.org/"><img src="https://img.shields.io/badge/Build%20System-CMake-064F8C?logo=cmake&logoColor=white" alt="CMake"></a>
+  <a href="https://nsis.sourceforge.io/"><img src="https://img.shields.io/badge/Installer-NSIS-FFA500" alt="NSIS"></a>
+  <a href="https://strawberryperl.com/"><img src="https://img.shields.io/badge/Dependency%20Build-Strawberry%20Perl-blue" alt="Strawberry Perl"></a>
+</p>
+
+This build is compiled with **Visual Studio / MSBuild** and **CMake**, the same toolchain used by upstream OrcaSlicer, with **Strawberry Perl** required for building dependencies. The Windows installer for this edition is packaged with **NSIS (Nullsoft Scriptable Install System)**.
+
+
 <p align="left">
   <a href="https://claude.ai"><img src="https://img.shields.io/badge/Made%20with-Claude-D97757?logo=claude&logoColor=white" alt="Made with Claude"></a>
   <a href="https://openai.com/chatgpt"><img src="https://img.shields.io/badge/Made%20with-ChatGPT-74AA9C?logo=openai&logoColor=white" alt="Made with ChatGPT"></a>
