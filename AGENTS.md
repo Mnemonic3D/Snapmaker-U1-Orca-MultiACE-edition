@@ -1,4 +1,4 @@
-# CLAUDE.md
+# Mnemonic3D.md
 
 OrcaSlicer — open-source C++17 3D slicer. wxWidgets GUI, CMake build system.
 
