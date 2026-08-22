@@ -97,6 +97,17 @@ This repository itself is a standalone (non-fork) publish of [Mnemonic3D/Snapmak
 
 ## Acknowledgments
 
+## Development Environment
+
+<p align="left">
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
+  <a href="https://code.visualstudio.com/"><img src="https://img.shields.io/badge/Editor-VS%20Code-007ACC?logo=visualstudiocode&logoColor=white" alt="VS Code"></a>
+  <a href="https://ubuntu.com/"><img src="https://img.shields.io/badge/Base%20Image-Ubuntu%2024.04-E95420?logo=ubuntu&logoColor=white" alt="Ubuntu 24.04"></a>
+  <a href="https://github.com/devcontainers"><img src="https://img.shields.io/badge/Dev%20Environment-Dev%20Containers-2496ED?logo=docker&logoColor=white" alt="Dev Containers"></a>
+</p>
+
+Development on this project also used a **Docker**-based dev container (Ubuntu 24.04, C++ toolchain) via the [devcontainers](https://github.com/devcontainers) "desktop-lite" feature for a reproducible GUI development environment, edited in **Visual Studio Code** with the CMake Tools and C++ Extension Pack extensions, with remote GUI access provided over noVNC.
+
 ## Build Tools
 
 <p align="left">
