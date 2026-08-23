@@ -9,6 +9,8 @@
 > This project is a **custom, reverse-engineered OrcaSlicer build** created to work with the existing Snapmaker U1, PAXX, and MultiACE firmware ecosystem. It does **not** replace, modify, maintain, or distribute those firmware projects.
 >
 > **All firmware updates, fixes, releases, and firmware-related support must be obtained through their respective official GitHub repositories.** This project only provides the OrcaSlicer-side integration and compatibility layer.
+>
+> [![Orca Slicer – MultiACE Edition by Mnemonic3D](https://img.youtube.com/vi/9BLnsdoWMc4/hqdefault.jpg)](https://youtu.be/9BLnsdoWMc4)
 
 ## 🚀 Live Release Coming Soon
 
