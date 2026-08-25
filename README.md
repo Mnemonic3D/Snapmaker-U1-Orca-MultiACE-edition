@@ -41,7 +41,7 @@ Additional work includes a Snapmaker-specific printer agent, live ACE slot and t
 
 ## Features
 
-See the **[complete Features page](FEATURES.md)** for the MultiACE integration,
+See the **[COMPLETE FEATURES PAGE](FEATURES.md)** for the MultiACE integration,
 live filament synchronization, logical-to-physical tool mapping, safety fixes,
 profiles, interface improvements, and Mnemonic3D branding included in this
 edition.
