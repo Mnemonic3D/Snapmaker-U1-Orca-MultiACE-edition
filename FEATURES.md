@@ -3,6 +3,36 @@
 Orca Slicer - MultiACE Edition by Mnemonic3D adds dedicated Snapmaker U1
 MultiACE support directly to OrcaSlicer.
 
+## Feature highlights
+
+### ACE filament management
+
+The U1 filament interface identifies ACE-managed toolheads, supports managed
+loading and unloading, and couples filament-detail color changes to the
+confirmed ACE auto-swap workflow.
+
+![ACE filament management, material selection, and color-change workflow](docs/images/features/ace-filament-management.png)
+
+### AFC compatibility for the Snapmaker U1 and ACE
+
+The AFC panel brings U1 physical-toolhead routing, ACE-backed lanes, live
+filament state, lane controls, and supported spool metadata into one responsive
+view.
+
+![AFC compatibility for the Snapmaker U1 and connected ACE units](docs/images/features/afc-snapmaker-u1-ace.png)
+
+### Printer-specific MultiACE controls and calibrated filaments
+
+The dedicated U1 Mnemonic3D MultiACE profile adds Auto Sync, 4 Head / All
+Colors views, manual filament synchronization, and a growing set of calibrated
+filament starting profiles. The calibration library is approximately 90%
+complete and remains under active development; users may adjust profiles for
+their spool, environment, nozzle, and machine.
+
+![U1 MultiACE synchronization controls and calibrated filament library](docs/images/features/orca-multiace-controls-calibrated-filaments.png)
+
+> Feature artwork created by Mnemonic3D.
+
 ## Patches and fixes
 
 * **Snapmaker U1 MultiACE Support** — Adds native recognition of the U1 as a MultiACE-capable printer.
