@@ -12,6 +12,23 @@ Something on your printer looking off after following these steps? See
 [Troubleshooting Commons](Troubleshooting-Commons.md) — most of what looks
 "broken" right after install is expected, documented behavior.
 
+## Prerequisites
+
+- **Remove vanilla/stock OrcaSlicer or Snapmaker's own OrcaSlicer (SnapOrca)
+  if either is installed.** This edition is already a full build of OrcaSlicer
+  with the MultiACE tweaks built in, not an addon — there's no reason to run
+  any of them alongside it, and all of them share the same
+  `%APPDATA%\OrcaSlicer` config folder, which can mix up printer profiles and
+  settings between them.
+- Windows 10 or 11 (64-bit)
+- [Visual C++ Redistributable (x64)](https://aka.ms/vs/17/release/vc_redist.x64.exe) installed
+- A working, up-to-date GPU driver — OrcaSlicer's 3D view needs a real OpenGL driver
+- A FAT32-formatted USB drive (for the firmware update in Step 1)
+- The printer's IP address (shown on its touchscreen) and Wi-Fi network access to it
+
+Orca Slicer can take 20-30 seconds to show its window on first launch with no
+visible activity in the meantime — that's normal, not a freeze.
+
 ## Step 1. Make sure your printer has 0.99.8b installed
 
 - Get `U1_1.5.2-paxx12-21_multiACE0.99.8b` from [Mult1ACE - Multi ACE Pro Software for Snapmaker U1](https://postapocalyptic-diy.com/mult1ace-multi-ace-pro-software-for-snapmaker-u1/)
