@@ -37,7 +37,7 @@ installed yet, start with the [Installation Guide](Installation-Guide.md).
 
 **Fix:**
 1. `Settings > Network` → open the Wi-Fi entry and re-enter the password (or toggle Wi-Fi off/on)
-2. If the interface itself is glitching and won't respond, fully power-cycle the printer — not a soft restart
+2. If the interface itself is glitching and won't respond, its because the user likely skipped a step during install and never fully power-cycled the printer — do that and check again
 
 ## 6. Verifying everything is actually correct
 
