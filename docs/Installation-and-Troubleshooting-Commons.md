@@ -11,35 +11,32 @@ documented behavior covered in the troubleshooting section below.
 
 ## Installing Orca Slicer - MultiACE Edition and the Mandatory Patch
 
-1. **Install Orca Slicer - MultiACE Edition**
-   - Go to this repository's [Releases page](https://github.com/Mnemonic3D/Snapmaker-U1-Orca-MultiACE-edition/releases) and download the latest Setup installer
-   - Run it and complete the installer
-   - Launch **Orca Slicer - MultiACE edition**
+### Step 1. Make sure your printer has 0.99.8b installed
 
-2. **Flash to genuine stock 0.99.8b**
-   - Extract `U1_1.5.2-paxx12-21_multiACE0.99.8b.bin` from the stock firmware zip
-   - Copy the `.bin` to the root of a FAT32 USB drive
-   - Touchscreen: `Settings > About > Firmware Version > Local Update` → select the file → confirm, let it reboot
-   - The patch's file baselines are built against genuine stock 0.99.8b — installing over anything else gets flagged as "locally modified"
+- Get `U1_1.5.2-paxx12-21_multiACE0.99.8b` from [decay71/multiACE releases](https://github.com/decay71/multiACE/releases)
+- Extract the `.bin` and copy it to the root of a FAT32 USB drive
+- Touchscreen: `Settings > About > Firmware Version > Local Update` → select the file → confirm, let it reboot
+- The Mandatory Patch's file baselines are built against genuine stock 0.99.8b — installing over anything else gets flagged as "locally modified"
 
-   ![Firmware Version screen — "LAN Mode is on, No internet connection, Can't update online" with the Local Update button](images/troubleshooting/firmware-local-update.jpg)
+![Firmware Version screen — "LAN Mode is on, No internet connection, Can't update online" with the Local Update button](images/troubleshooting/firmware-local-update.jpg)
 
-3. **Enable Root Access**
-   - Touchscreen: `Settings > Maintenance > Root Access` → scroll down and Agree → `Open`
-   - Credentials: `root` / `snapmaker` (this is what the installer uses over SSH)
+### Step 2. Install Orca Slicer - MultiACE Edition
+
+- Go to this repository's [Releases page](https://github.com/Mnemonic3D/Snapmaker-U1-Orca-MultiACE-edition/releases) and download the latest Setup installer
+- Run it and complete the installer
+- Launch **Orca Slicer - MultiACE edition**
+
+### Step 3. Install the patch onto the printer
+
+1. **Enable Root Access** — Touchscreen: `Settings > Maintenance > Root Access` → scroll down and Agree → `Open`. Credentials: `root` / `snapmaker` (this is what the installer uses over SSH).
 
    ![Root Access screen after granting access](images/troubleshooting/root-access-granted.jpg)
 
-4. **Open the Mandatory Patch installer and connect**
-   - Run `MultiACEPatchesInstaller.exe`
-   - Enter the printer's IP address (shown on the touchscreen) and click Connect
-   - The IP field is always blank by default
+2. **Open the Mandatory Patch installer and connect** — run `MultiACEPatchesInstaller.exe`, enter the printer's IP address (shown on the touchscreen), click Connect. The IP field is always blank by default.
 
-5. **Review and Apply**
-   - The installer verifies every file against known stock hashes — a genuinely stock printer should show `OK` across the board
-   - Click **Apply Patch**
+3. **Review and Apply** — the installer verifies every file against known stock hashes (a genuinely stock printer should show `OK` across the board), then click **Apply Patch**.
 
-6. **After "Patch Installed!" — do all three, in order:**
+4. **After "Patch Installed!" — do all three, in order:**
    1. **Full power cycle the printer** — power off completely, wait ~10 seconds, power back on. A soft restart from a menu is not the same thing; most of what was just written only takes effect, and only persists, after a real reboot.
    2. **Reconnect Wi-Fi** if it doesn't reconnect on its own (`Settings > Network`) — the first time Root Access is enabled after a flash, the connection can go stale.
    3. **Set filaments on the printer, and verify the MultiACE Web Preflight page** — every toolhead's confirmed filament source is intentionally cleared on restart (see below), so this needs to be re-checked after every reboot.
