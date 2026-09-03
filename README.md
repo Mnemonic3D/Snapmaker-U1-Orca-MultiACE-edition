@@ -47,7 +47,13 @@ live filament synchronization, logical-to-physical tool mapping, safety fixes,
 profiles, interface improvements, and Mnemonic3D branding included in this
 edition.
 
-Installing the Mandatory Patch, or something on your printer looking off after a fresh flash? See **[Installation and Trouble Shooting Commons](docs/Installation-and-Troubleshooting-Commons.md)**.
+---
+
+## Installation & Troubleshooting
+
+Installing Orca Slicer and the Mandatory Patch, or something on your printer
+looking off after a fresh flash? See
+**[Installation and Trouble Shooting Commons](docs/Installation-and-Troubleshooting-Commons.md)**.
 
 ---
 
