@@ -22,11 +22,6 @@
   <strong>Orca Slicer - MultiACE Edition by Mnemonic3D</strong>
 </div>
 
-## 🚀 Live Release Countdown
-
-<!-- COUNTDOWN:START -->
-Delayed until 3pm ET
-
 <a href="https://buymeacoffee.com/Mnemonic3d">
   <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=%E2%98%95&slug=Mnemonic3d&button_colour=FFDD00&font_colour=000000&font_family=Lato&outline_colour=000000&coffee_colour=ffffff"
        alt="Buy Me a Coffee"
