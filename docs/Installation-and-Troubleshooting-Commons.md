@@ -36,10 +36,11 @@ documented behavior covered in the troubleshooting section below.
 
 3. **Review and Apply** — the installer verifies every file against known stock hashes (a genuinely stock printer should show `OK` across the board), then click **Apply Patch**.
 
-4. **After "Patch Installed!" — do all three, in order:**
+4. **After "Patch Installed!" — do all four, in order:**
    1. **Full power cycle the printer** — power off completely, wait ~10 seconds, power back on. A soft restart from a menu is not the same thing; most of what was just written only takes effect, and only persists, after a real reboot.
    2. **Reconnect Wi-Fi** if it doesn't reconnect on its own (`Settings > Network`) — the first time Root Access is enabled after a flash, the connection can go stale.
-   3. **Set filaments on the printer, and verify the MultiACE Web Preflight page** — every toolhead's confirmed filament source is intentionally cleared on restart (see below), so this needs to be re-checked after every reboot.
+   3. **Ensure all filaments are set on the printer**, then **ensure the MultiACE Web Preflight page is set up to your needs** (mode, Feeder/ACE assignment per toolhead) **and filaments are set there too** — every toolhead's confirmed filament source is intentionally cleared on restart (see below), so this has to be redone after every reboot, not just checked once.
+   4. **Do one last reboot** to confirm everything you just set actually holds and persists correctly.
 
 ## Common Confusions and Fixes
 
