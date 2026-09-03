@@ -13,7 +13,7 @@ documented behavior covered in the troubleshooting section below.
 
 ### Step 1. Make sure your printer has 0.99.8b installed
 
-- Get `U1_1.5.2-paxx12-21_multiACE0.99.8b` from [decay71/multiACE releases](https://github.com/decay71/multiACE/releases)
+- Get `U1_1.5.2-paxx12-21_multiACE0.99.8b` from [postapocalyptic-diy.com](https://postapocalyptic-diy.com/download/2488/)
 - Extract the `.bin` and copy it to the root of a FAT32 USB drive
 - Touchscreen: `Settings > About > Firmware Version > Local Update` → select the file → confirm, let it reboot
 - The Mandatory Patch's file baselines are built against genuine stock 0.99.8b — installing over anything else gets flagged as "locally modified"
