@@ -25,10 +25,7 @@
 ## 🚀 Live Release Countdown
 
 <!-- COUNTDOWN:START -->
-🎉 **We're live!** Orca Slicer - MultiACE Edition by Mnemonic3D has been released.
-<!-- COUNTDOWN:END -->
-
-The first public release of **Orca Slicer - MultiACE Edition by Mnemonic3D** goes live **Sept 3, 2026, 9:00 AM ET**. The line above updates automatically every hour.
+Delayed until 3pm ET
 
 <a href="https://buymeacoffee.com/Mnemonic3d">
   <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=%E2%98%95&slug=Mnemonic3d&button_colour=FFDD00&font_colour=000000&font_family=Lato&outline_colour=000000&coffee_colour=ffffff"
