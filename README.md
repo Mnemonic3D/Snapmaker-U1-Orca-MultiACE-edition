@@ -25,7 +25,7 @@
 ## 🚀 Live Release Countdown
 
 <!-- COUNTDOWN:START -->
-⏳ **Releasing in 13h 48m** (target: Sept 3, 2026, 9:00 AM ET)
+⏳ **Releasing in 9h 4m** (target: Sept 3, 2026, 9:00 AM ET)
 <!-- COUNTDOWN:END -->
 
 The first public release of **Orca Slicer - MultiACE Edition by Mnemonic3D** goes live **Sept 3, 2026, 9:00 AM ET**. The line above updates automatically every hour.
