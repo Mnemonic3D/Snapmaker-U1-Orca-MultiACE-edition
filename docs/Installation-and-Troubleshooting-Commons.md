@@ -5,6 +5,10 @@ genuinely stock-flashed Snapmaker U1 MultiACE (firmware 0.99.8b). Follow the
 install steps in order — most of what looks "broken" afterward is expected,
 documented behavior covered in the troubleshooting section below.
 
+> **Physically wiring and setting up your ACE units is out of scope here.**
+> For real-time, up-to-date instructions on properly setting up ACEs, see
+> [decay71/multiACE](https://github.com/decay71/multiACE).
+
 ## Installing Orca Slicer - MultiACE Edition and the Mandatory Patch
 
 1. **Install Orca Slicer - MultiACE Edition**
