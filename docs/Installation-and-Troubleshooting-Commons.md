@@ -72,7 +72,13 @@ documented behavior covered in the troubleshooting section below.
 
 Open the MultiACE web dashboard:
 - Every toolhead you intend to print with should read a real material, not "Unknown source"
-- Mode should match your setup (`normal` / `multi` / `head`)
+- Mode should match your setup (`normal` / `multi` / `head`) — set on the Config page
 - ACE routing (the small `ACE` badge) should only appear on toolheads actually fed by an ACE, and only in `multi` or `head` mode — never in `normal` mode
+
+![Config page — Mode selector and Reboot printer button](images/troubleshooting/config-page.jpg)
+
+A correctly set up printer looks like this: every toolhead shows a real material and source, Feeder heads are checked and show their loaded filament, and the ACE-routed head shows its confirmed slot.
+
+![Dashboard showing a fully confirmed, correctly configured toolhead layout](images/troubleshooting/dashboard-healthy.jpg)
 
 If something still looks wrong after checking against the items above, it's worth reporting as a real issue rather than assuming user error.
