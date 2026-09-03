@@ -33,7 +33,7 @@ installed yet, start with the [Installation Guide](Installation-Guide.md).
 
 ## 5. Wi-Fi icon says connected, but it isn't
 
-**Why:** The first time persistent Root Access is enabled after a fresh flash, the Wi-Fi connection can go stale while the status icon keeps reporting the old "connected" state. This is a one-time firmware quirk tied to that first enable.
+**Why:** This happens when the printer was only soft-restarted (from a menu) instead of a full manual power cycle. A soft restart can leave Wi-Fi in a stale state where the status icon keeps reporting "connected" even though it isn't.
 
 **Fix:**
 1. `Settings > Network` → open the Wi-Fi entry and re-enter the password (or toggle Wi-Fi off/on)
