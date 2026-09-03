@@ -260,6 +260,39 @@ int get_dpi_for_window(const wxWindow *window)
 #endif
 }
 
+// Orca: like get_dpi_for_window(), but for a screen position rather than an
+// existing window - needed to size a window (e.g. a splash screen) for the
+// monitor it will appear on before that window exists to query.
+int get_dpi_for_point(const wxPoint &pos)
+{
+#ifdef _WIN32
+    enum MONITOR_DPI_TYPE_ {
+        // This enum is inlined here to avoid build-time dependency
+        MDT_EFFECTIVE_DPI_ = 0,
+        MDT_ANGULAR_DPI_ = 1,
+        MDT_RAW_DPI_ = 2,
+        MDT_DEFAULT_ = MDT_EFFECTIVE_DPI_,
+    };
+    struct GetDpiForMonitor_t { typedef HRESULT (WINAPI *FN)(HMONITOR hmonitor, MONITOR_DPI_TYPE_ dpiType, UINT *dpiX, UINT *dpiY); };
+    static auto GetDpiForMonitor_fn = winapi_get_function<GetDpiForMonitor_t>(L"Shcore.dll", "GetDpiForMonitor");
+
+    const POINT pt{ pos.x, pos.y };
+    const HMONITOR monitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+
+    if (GetDpiForMonitor_fn != nullptr) {
+        UINT dpiX;
+        UINT dpiY;
+        return GetDpiForMonitor_fn(monitor, MDT_EFFECTIVE_DPI_, &dpiX, &dpiY) == S_OK ? dpiX : DPI_DEFAULT;
+    } else {
+        // We're on Windows earlier than 8.1: no per-monitor DPI to query, fall
+        // back to the desktop/primary DPI via the existing window-based path.
+        return get_dpi_for_window(nullptr);
+    }
+#else
+    return get_dpi_for_window(nullptr);
+#endif
+}
+
 wxFont get_default_font_for_dpi(const wxWindow *window, int dpi)
 {
 #ifdef _WIN32

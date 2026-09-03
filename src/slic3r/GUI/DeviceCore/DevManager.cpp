@@ -334,50 +334,6 @@ namespace Slic3r
                     << ", con_type= " << connect_type <<", signal= " << printer_signal << ", bind_state= " << bind_state;
             }
             update_local_machine(*obj);
-
-            // MultiACE startup sync after exact host becomes alive.
-            // System presets are never allowed to trigger this.
-            const auto& active_printer_preset =
-                GUI::wxGetApp().preset_bundle->printers.get_edited_preset();
-
-            if (active_printer_preset.is_user()) {
-                const auto& printer_cfg = active_printer_preset.config;
-                const std::string printer_settings_id =
-                    printer_cfg.opt_string("printer_settings_id");
-
-                const bool is_multiace_u1 =
-                    printer_settings_id.find("Snapmaker U1 MultiACE") != std::string::npos ||
-                    printer_cfg.opt_string("inherits").rfind("Snapmaker U1 MultiACE", 0) == 0;
-
-                const std::string print_host = printer_cfg.opt_string("print_host");
-                const std::string port = printer_cfg.opt_string("printhost_port");
-
-                if (!print_host.empty()) {
-                    const std::string target_dev_id =
-                        MachineObject::dev_id_from_address(print_host, port);
-
-                    if (dev_id == target_dev_id) {
-                        static std::string last_multiace_autosync_dev_id;
-
-                        if (last_multiace_autosync_dev_id != dev_id) {
-                            last_multiace_autosync_dev_id = dev_id;
-
-                            if (!GUI::wxGetApp().app_config->get_bool("multiace_auto_sync_on_startup"))
-                                return;
-
-                            // Give MultiACE time to publish the complete ACE/feeder inventory.
-                            auto timer = new wxTimer();
-                            timer->Bind(wxEVT_TIMER, [timer](wxTimerEvent &) {
-                                timer->Stop();
-                                if (GUI::wxGetApp().plater())
-                                    GUI::wxGetApp().sidebar().sync_ams_list();
-                                delete timer;
-                            });
-                            timer->StartOnce(3000);
-                        }
-                    }
-                }
-            }
         }
         catch (...) {
             ;

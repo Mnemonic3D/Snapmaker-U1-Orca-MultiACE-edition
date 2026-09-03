@@ -77,6 +77,7 @@ void on_window_geometry(wxTopLevelWindow *tlw, std::function<void()> callback);
 enum { DPI_DEFAULT = 96 };
 
 int get_dpi_for_window(const wxWindow *window);
+int get_dpi_for_point(const wxPoint &pos);
 wxFont get_default_font_for_dpi(const wxWindow* window, int dpi);
 inline wxFont get_default_font(const wxWindow* window) { return get_default_font_for_dpi(window, get_dpi_for_window(window)); }
 

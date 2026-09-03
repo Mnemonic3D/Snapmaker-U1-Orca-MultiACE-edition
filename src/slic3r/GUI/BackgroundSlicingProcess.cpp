@@ -755,6 +755,14 @@ void BackgroundSlicingProcess::reset_export()
 	if (! this->running()) {
 		m_export_path.clear();
 		m_export_path_on_removable_media = false;
+		// A print/upload request that never reached prepare_upload() (e.g. it
+		// errored out earlier in the same pass, such as a failed
+		// post-processing script) leaves m_upload_job armed with no further
+		// confirmation pending. The next unrelated slice - even a bare
+		// "Slice" click - would otherwise silently upload and start a print
+		// the moment process_fff() finds it still non-empty. Clear it here so
+		// only a fresh, successfully-confirmed Print/Send arms it again.
+		m_upload_job = PrintHostJob();
 		// invalidate_step expects the mutex to be locked.
 		std::scoped_lock<std::mutex> lock(m_print->state_mutex());
 		this->invalidate_step(bspsGCodeFinalize);

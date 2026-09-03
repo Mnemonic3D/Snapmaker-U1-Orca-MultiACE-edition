@@ -281,6 +281,55 @@ bool is_associate_files(std::wstring extend)
 }
 #endif
 
+// ORCA: size and place the splash from the actual usable area of the display
+// it will appear on (the one under the mouse cursor if no prior window
+// position is known), instead of blindly DPI-scaling the fixed 480x985
+// design size (which could enlarge the splash past the screen on some
+// monitor/DPI combinations). The app is per-monitor-DPI-aware (v2), so
+// wxDisplay::GetClientArea() returns physical pixels for that specific
+// monitor - the 480x985 design size is in DIPs, so it must be converted to
+// that same display's physical pixels before comparing against the work
+// area. Never enlarges beyond that DPI-correct physical size; only shrinks
+// it, preserving the 480:985 aspect ratio, to fit within 90% of the
+// display's usable (taskbar-excluded) work area, with a hard clamp to 95%
+// of the work area regardless.
+//
+// NOTE: wxDisplay::GetScaleFactor() has been observed to report a stale or
+// simply wrong scale factor for the target display on some per-monitor-v2
+// setups (e.g. reporting 1.25 for a monitor Windows itself reports as
+// 150%/1.5), which desyncs the computed splash size from the screen it
+// actually lands on and can push it partly off-screen once centered. Query
+// the OS directly for the monitor's real DPI (get_dpi_for_point(), the same
+// mechanism already used for per-window DPI elsewhere in this file) instead
+// of trusting wx's abstraction.
+struct SplashPlacement { wxSize size; wxPoint top_left; };
+
+static SplashPlacement get_splash_placement(const wxPoint& pos)
+{
+    const wxSize design_size_dip(480, 985);
+    wxPoint probe_pos = (pos != wxDefaultPosition) ? pos : wxGetMousePosition();
+    int display_idx = wxDisplay::GetFromPoint(probe_pos);
+    if (display_idx == wxNOT_FOUND)
+        display_idx = 0;
+    wxDisplay display(display_idx);
+    wxRect work_area = display.GetClientArea();
+    double scale_factor = get_dpi_for_point(probe_pos) / double(DPI_DEFAULT);
+    double design_w = design_size_dip.GetWidth() * scale_factor;
+    double design_h = design_size_dip.GetHeight() * scale_factor;
+    double max_w = work_area.GetWidth() * 0.9;
+    double max_h = work_area.GetHeight() * 0.9;
+    double scale = std::min({1.0, max_w / design_w, max_h / design_h});
+    int w = int(design_w * scale);
+    int h = int(design_h * scale);
+    // Hard safety clamp: never exceed the real usable work area, regardless
+    // of any remaining scale-factor mismatch.
+    w = std::min(w, int(work_area.GetWidth() * 0.95));
+    h = std::min(h, int(work_area.GetHeight() * 0.95));
+    wxPoint top_left(work_area.GetLeft() + (work_area.GetWidth() - w) / 2,
+                      work_area.GetTop() + (work_area.GetHeight() - h) / 2);
+    return SplashPlacement{ wxSize(w, h), top_left };
+}
+
 class SplashScreen : public wxSplashScreen
 {
 public:
@@ -289,7 +338,7 @@ public:
         // is shown. The previous 1500 ms auto-timeout closed the splash long
         // before init finished, leaving the user staring at a frozen blank
         // screen during the slow load_presets / new MainFrame phases.
-        : wxSplashScreen(wxBitmap(FromDIP(wxSize(480,985),nullptr)), wxSPLASH_CENTRE_ON_SCREEN, 0, nullptr, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+        : wxSplashScreen(wxBitmap(get_splash_placement(pos).size), wxSPLASH_CENTRE_ON_SCREEN, 0, nullptr, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 #ifdef __APPLE__
             wxBORDER_NONE | wxFRAME_NO_TASKBAR | wxSTAY_ON_TOP
 #else
@@ -297,8 +346,12 @@ public:
 #endif // !__APPLE__
         )
     {
-        this->SetPosition(pos);
-        this->CenterOnScreen();
+        // Explicitly place the window on the same display/work-area used to
+        // size it above, rather than relying on CenterOnScreen() (which,
+        // starting from wxDefaultPosition, isn't guaranteed to resolve to
+        // that same display and previously could recenter using the wrong
+        // screen's dimensions).
+        this->SetPosition(get_splash_placement(pos).top_left);
 
         scale_font(m_font_version, 1.65f); // only scale this one since it hasnt a preloaded font like Label::Body_24;
 
@@ -2879,7 +2932,18 @@ bool GUI_App::on_init_inner()
         if (app_config->has("window_mainframe")) {
             auto metrics = WindowMetrics::deserialize(app_config->get("window_mainframe"));
             if (metrics)
-                splashscreen_pos = metrics->get_rect().GetPosition();
+                // Orca: use the saved mainframe rect's CENTER, not its
+                // top-left corner. A maximized window's saved top-left is
+                // often slightly negative (Windows includes the invisible
+                // resize-border padding), and on multi-monitor setups a
+                // corner sitting right at/near another display's boundary
+                // can resolve (via wxDisplay::GetFromPoint / MonitorFromPoint)
+                // to the WRONG monitor entirely - e.g. an overlapping virtual
+                // display some remote-access/streaming software installs -
+                // silently sizing and placing the splash for that display's
+                // work area and DPI instead of the one the window actually
+                // appeared on. The center point is unambiguous.
+                splashscreen_pos = metrics->get_rect().GetPosition() + wxPoint(metrics->get_rect().GetSize().GetWidth() / 2, metrics->get_rect().GetSize().GetHeight() / 2);
         }
 
         BOOST_LOG_TRIVIAL(info) << "begin to show the splash screen...";

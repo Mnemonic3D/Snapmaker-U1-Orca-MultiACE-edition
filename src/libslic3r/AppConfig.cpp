@@ -231,8 +231,6 @@ void AppConfig::set_defaults()
 
     if (get("enable_append_color_by_sync_ams").empty())
         set_bool("enable_append_color_by_sync_ams", true);
-    if (get("multiace_auto_sync_on_startup").empty())
-        set_bool("multiace_auto_sync_on_startup", true);
     if (get("enable_merge_color_by_sync_ams").empty())
         set_bool("enable_merge_color_by_sync_ams", false);
     if (get("ams_sync_match_full_use_color_dist").empty())

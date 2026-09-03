@@ -3607,7 +3607,11 @@ void PresetBundle::update_filament_multi_color()
         }
     }
     ConfigOptionStrings *filament_multi_colour = project_config.option<ConfigOptionStrings>("filament_multi_colour");
-    filament_multi_colour->resize(exsit_multi_colors.size());
+    // ConfigOptionVector::resize() throws "No default value provided" when
+    // growing an option with no registered default - and it's redundant here
+    // anyway, since the very next line replaces `values` wholesale (which
+    // already sets both size and content). Assigning directly avoids the
+    // throw without changing behavior.
     filament_multi_colour->values = exsit_multi_colors;
 }
 

@@ -538,7 +538,6 @@ struct Sidebar::priv
     // their neighbours on any rescale/relayout pass (e.g. switching between
     // Prepare/Preview/Device/Project). Stored here now so msw_rescale() can
     // reach them too.
-    SwitchButton* multiace_auto_sync_toggle = nullptr;
     SwitchButton* multiace_filament_view_toggle = nullptr;
     int m_menu_filament_id = -1;
     wxScrolledWindow* m_panel_filament_content;
@@ -2166,34 +2165,6 @@ Sidebar::Sidebar(Plater *parent)
 
     bSizer39->Add(ams_btn, 0, wxALIGN_CENTER | wxLEFT, FromDIP(SidebarProps::WideSpacing()));
 
-    // MultiACE automatic startup sync.
-    const bool multiace_auto_enabled =
-        wxGetApp().app_config->get_bool("multiace_auto_sync_on_startup");
-
-    auto multiace_auto_label = new Label(p->m_panel_filament_title, _L("Auto Sync"));
-
-    p->multiace_auto_sync_toggle = new SwitchButton(
-        p->m_panel_filament_title);
-    p->multiace_auto_sync_toggle->SetMaxSize({em_unit(this) * 8, -1});
-    p->multiace_auto_sync_toggle->SetLabels(_L("On"), _L("Off"));
-    p->multiace_auto_sync_toggle->SetValue(!multiace_auto_enabled);
-    p->multiace_auto_sync_toggle->SetToolTip(
-        _L("Enable or disable automatic filament synchronization when Orca starts. Manual synchronization is unaffected."));
-
-    p->multiace_auto_sync_toggle->Bind(
-        wxEVT_TOGGLEBUTTON,
-        [this](wxCommandEvent &e) {
-            const bool enabled = !p->multiace_auto_sync_toggle->GetValue();
-            wxGetApp().app_config->set_bool("multiace_auto_sync_on_startup", enabled);
-            wxGetApp().app_config->save();
-            e.Skip();
-        });
-
-    bSizer39->Add(
-        p->multiace_auto_sync_toggle, 0,
-        wxALIGN_CENTER_VERTICAL | wxLEFT,
-        FromDIP(SidebarProps::WideSpacing()));
-
     // MultiACE filament view.
     const bool multiace_loaded_heads_view =
         wxGetApp().app_config->get("multiace_filament_view_mode") == "loaded";
@@ -2243,17 +2214,10 @@ Sidebar::Sidebar(Plater *parent)
     bSizer39->Detach(del_btn);
     bSizer39->Detach(add_btn);
     bSizer39->Detach(ams_btn);
-    bSizer39->Detach(p->multiace_auto_sync_toggle);
     bSizer39->Detach(p->multiace_filament_view_toggle);
     bSizer39->Detach(set_btn);
 
     auto multiace_center_sizer = new wxBoxSizer(wxHORIZONTAL);
-    multiace_center_sizer->Add(
-        multiace_auto_label, 0,
-        wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(4));
-    multiace_center_sizer->Add(
-        p->multiace_auto_sync_toggle, 0,
-        wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(8));
     multiace_center_sizer->Add(
         p->multiace_filament_view_toggle, 0,
         wxALIGN_CENTER_VERTICAL);
@@ -3037,8 +3001,6 @@ void Sidebar::msw_rescale()
     // reachable from this function (see the member-variable fix on their
     // declaration). Left stale, they visually diverged from their neighbours
     // ("wacky"/truncated) on any rescale pass.
-    if (p->multiace_auto_sync_toggle)
-        p->multiace_auto_sync_toggle->Rescale();
     if (p->multiace_filament_view_toggle)
         p->multiace_filament_view_toggle->Rescale();
     p->m_flushing_volume_btn->Rescale();
@@ -3136,8 +3098,6 @@ void Sidebar::sys_color_changed()
     // reachable from this function (see the member-variable fix on their
     // declaration). Left stale, they visually diverged from their neighbours
     // ("wacky"/truncated) on any rescale pass.
-    if (p->multiace_auto_sync_toggle)
-        p->multiace_auto_sync_toggle->Rescale();
     if (p->multiace_filament_view_toggle)
         p->multiace_filament_view_toggle->Rescale();
     p->m_flushing_volume_btn->Rescale();
