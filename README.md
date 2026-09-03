@@ -51,9 +51,8 @@ edition.
 
 ## Installation & Troubleshooting
 
-Installing Orca Slicer and the Mandatory Patch, or something on your printer
-looking off after a fresh flash? See
-**[Installation and Trouble Shooting Commons](docs/Installation-and-Troubleshooting-Commons.md)**.
+- **[Installation Guide](docs/Installation-Guide.md)** — installing Orca Slicer - MultiACE Edition and the Mandatory Patch, start to finish
+- **[Troubleshooting Commons](docs/Troubleshooting-Commons.md)** — something on your printer looking off after a fresh flash? Most of it is expected, documented behavior
 
 ---
 
