@@ -1,0 +1,556 @@
+{
+  "patch_id": "mnemonic3d-firmware-enhancements",
+  "patch_name": "Mnemonic3D's Firmware Enhancements",
+  "version": "2026.09.03.01",
+  "notes": "Split out 2026-09-02 from the combined multiace-afc-panel-sync patch (last combined version 2026.09.02.12) into a dedicated optional-enhancements-only installer. Requires the separate \"Mnemonic3D's Orca MultiACE and Firmware Patches\" installer (patch_sources.json) to already be applied to the target printer first - every group here originally declared requires: [orca-multiace-mandatory] and/or [tpu-ace-managed-touchscreen], which now live in that other installer and are assumed already present rather than re-bundled here. Contains: Mnemonic3D Recommended Printer Enhancements, Material-Aware ACE Rollback Enhancement, Mnemonic3D Calibrated Filaments, Panda Breath Gradual Warm-Up Boost, and the still-excluded-pending-approval Tube Length Calibration Wizard. .02: added the Mnemonic3D Dashboard Theme group - a purely visual reskin of the MultiACE web dashboard (index.html/style.css) matching the project's brand identity, built entirely on the existing CSS custom-property system already in stock style.css so no selector, layout, or JS behavior needed to change. Ships as alternate variants of the same mandatory multiace-web-index/multiace-web-css files (variant_group multiace-web-index/multiace-web-css), so installing it after Patches replaces the plain default look; the mandatory files themselves are untouched and stay plain unless this group is checked. Verified live on 192.168.4.33 across Dashboard, Spools, and the full Config page with no visual regressions before this entry was added. Per-material load/unload temperature preference (the request to let users blank out custom temps back to stock Snapmaker defaults) is handled instead via the live [ace_tipform] mode: stock/custom switch already built into the mandatory Patches installer's Config page - no enhancement-side change was needed. 2026.09.03.01: added the afc-panel-support group (afc-lane, afc-unit, afc-cfg, mainsail-afc-css), moved here from patch_sources.json's mandatory orca-multiace-mandatory group - AFC lane/panel display is not needed for Orca MultiACE edition to function, so it belongs in Features, not Mandatory.",
+  "backup_root": "/home/lava/u1-patch-backups",
+  "legacy_cleanup_preserve": [
+    "/home/lava/klipper/klippy/extras/ace_tipform.py",
+    "/home/lava/printer_data/config/extended/ace.cfg"
+  ],
+  "post_actions": [
+    "restart_klipper",
+    "restart_multiace_web",
+    "restart_lmd"
+  ],
+  "_requires_note": "multiACE 0.99.8b is now publicly released, so it is a hard precondition: this patch is the delta ON TOP of stock 0.99.8b. A printer below it must flash the 0.99.8b firmware first. Beyond versions, the installer's only other requirement is that it can write the files, and it updates just the ones that differ.",
+  "requires": {
+    "min_firmware_version": "1.5.2",
+    "min_multiace_version": "0.99.8b",
+    "enforce": true
+  },
+  "project_root": "D:/Testing Only/Printer Firmware & Patch Installer",
+  "_groups_note": "Added 2026-08-23 so the installer can offer per-fix checkboxes instead of all-or-nothing. Each group's 'files' list references file ids below by id. 'requires' lists other group ids that MUST also be selected - checking this group auto-checks those too, and they cannot be unchecked while a group that requires them is checked. This is deliberately a 'hard requires' relationship, not a soft suggestion: the files in a dependent group call directly into the files of the group(s) it requires, so a partial install would ship a broken half of a feature.",
+  "groups": [
+    {
+      "id": "multiace-tube-calibration-ui",
+      "_excluded": true,
+      "_exclusion_reason": "Development remains in progress. Do not package this wizard until the user explicitly approves it after the workflow is finished.",
+      "title": "Tube Length Calibration Wizard (Optional)",
+      "description": "Adds a guided tool to the MultiACE Dashboard. Before calibrating each slot, insert its filament normally like a fresh spool load and let the ACE finish its own automatic intake and parking cycle until the slot is ready and all ACE filament motion has stopped; the target toolhead must remain empty. Then choose that ACE slot and toolhead and confirm once. The printer performs two complete slow, sensor-checked load and verified-unload passes, including the normal toolhead seating and flow checks. Review the conservative result and choose Accept & save. The installer itself never moves filament. The existing learned route is cleared when calibration starts for safety, and the replacement calibration is not saved unless you accept it. V1 ACE hardware remains in safe slow-only mode.",
+      "items": [
+        "The installer only adds the wizard; it does not move filament or run calibration during installation",
+        "Before calibrating each slot, insert its filament normally like a fresh spool load and let the ACE finish its automatic intake and parking cycle; wait for Ready with all ACE filament motion stopped, while keeping the target toolhead empty",
+        "On the MultiACE Dashboard, choose an available ACE slot and compatible empty toolhead, then confirm once",
+        "Runs two automatic slow, sensor-checked loads and two verified unloads; normal homing, tool selection, heating, seating, flow verification and purge may occur",
+        "Clears the selected route's old learned boundary at the start so an unsafe older value cannot return",
+        "Shows both conservative sensor-arrival observations and the proposed fast and slow sections before anything new is saved",
+        "Only Accept & save writes the new route calibration; failed, expired or discarded results leave the route slow-only",
+        "After saving, choose Calibrate next slot or Close; run it again after changing a tube, splitter, coupler, ACE connection or filament route"
+      ],
+      "title_i18n": {
+        "zh": "导料管长度校准向导（可选）",
+        "ja": "チューブ長キャリブレーションウィザード（オプション）",
+        "ko": "튜브 길이 보정 마법사(선택 사항)",
+        "de": "Assistent zur Kalibrierung der Schlauchlänge (optional)",
+        "fr": "Assistant d’étalonnage de la longueur du tube (facultatif)",
+        "it": "Procedura guidata di calibrazione della lunghezza del tubo (opzionale)"
+      },
+      "description_i18n": {
+        "zh": "在 MultiACE 控制面板中添加引导式工具。校准每个料槽之前，请像装入新线轴一样正常插入耗材，让 ACE 自动完成进料和停放，直到料槽显示“就绪”且所有 ACE 耗材运动停止；目标工具头必须保持空置。安装完成后，选择 ACE 料槽和工具头并确认一次，打印机会以低速、传感器监控的方式自动执行两次完整装载和两次验证卸载。查看保守结果后，选择“接受并保存”。安装程序本身不会移动耗材；校准开始时会为安全起见清除所选路径的旧学习值，只有在您接受结果后才会保存替代校准值。V1 ACE 硬件始终保持安全低速模式。",
+        "ja": "MultiACE ダッシュボードにガイド付きツールを追加します。各スロットを校正する前に、新しいスプールを装填するときと同じようにフィラメントを通常どおり挿入し、スロットが「準備完了」と表示されて ACE のフィラメント動作が完全に停止するまで、自動取り込みとパーキングを完了させてください。対象ツールヘッドは空のままにします。インストール後、ACE スロットとツールヘッドを選び、一度確認すると、プリンターが低速かつセンサー監視付きで2回の完全なロードと2回の検証済みアンロードを自動実行します。保守的な結果を確認してから「承認して保存」を選びます。インストーラー自体はフィラメントを動かしません。安全のため開始時に選択した経路の古い学習値を消去し、代わりの値は承認するまで保存されません。V1 ACE ハードウェアは安全な低速モードのままです。",
+        "ko": "MultiACE 대시보드에 안내 도구를 추가합니다. 각 슬롯을 보정하기 전에 새 스풀을 넣을 때처럼 필라멘트를 정상적으로 삽입하고, 슬롯이 준비 상태를 표시하며 모든 ACE 필라멘트 움직임이 멈출 때까지 ACE의 자동 흡입 및 주차 동작이 끝나도록 하십시오. 대상 툴헤드는 비어 있어야 합니다. 설치 후 ACE 슬롯과 툴헤드를 선택하고 한 번 확인하면 프린터가 저속으로 센서를 확인하며 두 번의 전체 로드와 두 번의 검증된 언로드를 자동 실행합니다. 보수적인 결과를 검토한 다음 ‘수락 및 저장’을 선택하십시오. 설치 프로그램 자체는 필라멘트를 움직이지 않습니다. 안전을 위해 시작할 때 선택한 경로의 기존 학습 값을 지우며, 대체 보정 값은 사용자가 결과를 수락하기 전에는 저장되지 않습니다. V1 ACE 하드웨어는 안전한 저속 전용 모드를 유지합니다.",
+        "de": "Fügt dem MultiACE-Dashboard einen geführten Assistenten hinzu. Vor der Kalibrierung jedes Slots legen Sie das Filament wie bei einer neuen Spule normal ein und lassen den ACE seinen automatischen Einzug und das Parken vollständig beenden, bis der Slot „Bereit“ meldet und jede Filamentbewegung des ACE gestoppt ist; der Ziel-Werkzeugkopf muss leer bleiben. Nach der Installation wählen Sie einen ACE-Slot und einen Druckkopf aus und bestätigen einmal. Der Drucker führt anschließend automatisch zwei vollständige langsame, sensorgeprüfte Ladevorgänge und zwei geprüfte Entladevorgänge aus. Prüfen Sie das konservative Ergebnis und wählen Sie dann „Übernehmen und speichern“. Das Installationsprogramm selbst bewegt kein Filament. Der alte Lernwert des gewählten Wegs wird zu Beginn aus Sicherheitsgründen gelöscht; die neue Kalibrierung wird erst nach Ihrer Bestätigung gespeichert. V1-ACE-Hardware bleibt im sicheren Langsammodus.",
+        "fr": "Ajoute un assistant guidé au tableau de bord MultiACE. Avant d’étalonner chaque emplacement, insérez normalement le filament comme pour une nouvelle bobine et laissez l’ACE terminer automatiquement l’admission et le stationnement jusqu’à ce que l’emplacement indique « Prêt » et que tout mouvement de filament ACE soit arrêté ; la tête cible doit rester vide. Après l’installation, choisissez un emplacement ACE et une tête d’impression, puis confirmez une seule fois. L’imprimante effectue automatiquement deux chargements complets lents contrôlés par capteur et deux déchargements vérifiés. Vérifiez le résultat prudent, puis choisissez « Accepter et enregistrer ». Le programme d’installation lui-même ne déplace pas le filament. L’ancienne valeur apprise du trajet sélectionné est effacée au début par sécurité ; le nouvel étalonnage n’est enregistré qu’après votre acceptation. Le matériel ACE V1 reste en mode lent sécurisé.",
+        "it": "Aggiunge uno strumento guidato alla dashboard MultiACE. Prima di calibrare ogni slot, inserisci normalmente il filamento come con una nuova bobina e lascia che l’ACE completi automaticamente l’inserimento e il parcheggio finché lo slot non indica «Pronto» e ogni movimento del filamento ACE non si è arrestato; la testina di destinazione deve restare vuota. Dopo l’installazione, seleziona uno slot ACE e una testina, quindi conferma una sola volta. La stampante esegue automaticamente due caricamenti completi lenti controllati dai sensori e due scaricamenti verificati. Controlla il risultato prudenziale, quindi scegli «Accetta e salva». Il programma di installazione non muove il filamento. Il vecchio valore appreso del percorso selezionato viene eliminato all’avvio per sicurezza; la nuova calibrazione viene salvata solo dopo l’accettazione. L’hardware ACE V1 rimane in modalità lenta sicura."
+      },
+      "files": [
+        "multiace-web-index-tube-calibration",
+        "multiace-web-css-tube-calibration",
+        "multiace-web-app-js-tube-calibration",
+        "multiace-web-i18n-en-tube-calibration",
+        "multiace-web-i18n-de-tube-calibration"
+      ],
+      "requires": [],
+      "default_checked": false
+    },
+    {
+      "id": "mnemonic3d-recommended-enhancements",
+      "title": "Mnemonic3D Recommended Printer Enhancements",
+      "_combined_note": "One optional set for the approved temperatures and extra stock wipe. Tip-form changes are deliberately excluded so the printer keeps its existing stock behavior; the rejected broad/nozzle-size custom motion, second purge, pressure-relief retract and sensor-bypass experiments remain excluded.",
+      "description": "Mnemonic3D's recommended (optional) printer enhancements, on top of the mandatory Orca MultiACE patches. See the items below or click the README for full details on each.",
+      "items": [
+        "Stock-motion unload cleanup - one extra pass of the firmware's stock nozzle-wipe routine for a direct-feed toolhead, or five rapid passes when the channel is ACE-routed (helps clear filament left over from purging); no added extrusion, retraction, purge push, distance, speed, fan or retry sequence",
+        "Material temperatures - approved per-family nozzle-cleaning temperatures applied in memory; tip forming remains whatever stock firmware provides"
+      ],
+      "title_i18n": {
+        "zh": "Mnemonic3D 推荐打印机增强功能",
+        "ja": "Mnemonic3D 推奨プリンター強化機能",
+        "ko": "Mnemonic3D 권장 프린터 향상 기능",
+        "de": "Von Mnemonic3D empfohlene Drucker-Erweiterungen",
+        "fr": "Améliorations d'imprimante recommandées par Mnemonic3D",
+        "it": "Miglioramenti stampante consigliati da Mnemonic3D"
+      },
+      "description_i18n": {
+        "zh": "Mnemonic3D 推荐的（可选）打印机增强功能，建立在强制安装的 Orca MultiACE 补丁之上。请查看下方条目，或点击 README 查看每项的完整说明。",
+        "ja": "必須の Orca MultiACE パッチに加えて適用される、Mnemonic3D 推奨の（任意の）プリンター強化機能です。詳細は下記の項目、または README をクリックして確認してください。",
+        "ko": "필수 Orca MultiACE 패치에 추가로 적용되는 Mnemonic3D의 권장(선택) 프린터 향상 기능입니다. 아래 항목을 확인하거나 README를 클릭해 각 항목의 전체 설명을 확인하세요.",
+        "de": "Von Mnemonic3D empfohlene (optionale) Drucker-Erweiterungen, zusätzlich zu den obligatorischen Orca-MultiACE-Patches. Siehe die Punkte unten oder klicken Sie auf README für alle Details zu jedem einzelnen.",
+        "fr": "Améliorations d'imprimante recommandées (facultatives) par Mnemonic3D, en plus des correctifs Orca MultiACE obligatoires. Voir les éléments ci-dessous ou cliquer sur le README pour tous les détails sur chacun.",
+        "it": "Miglioramenti stampante consigliati (opzionali) da Mnemonic3D, in aggiunta alle patch obbligatorie Orca MultiACE. Vedi gli elementi qui sotto o clicca su README per i dettagli completi su ciascuno."
+      },
+      "_historical_items_i18n": {
+        "zh": [
+          "原厂运动卸载清理 - 仅额外执行一次固件原厂喷嘴擦拭程序；不增加挤出、回抽、清料推进、距离、速度、风扇或重试序列",
+          "材料温度和 TPU 温和尖端成型 - 按材料设置温度；只有 TPU 使用计算后的较慢尖端成型速度，其他材料保持原厂尖端成型运动"
+        ],
+        "ja": [
+          "純正モーションのアンロード清掃 - ファームウェア純正ノズルワイプを1回だけ追加し、押出・リトラクト・追加パージ・距離・速度・ファン・再試行シーケンスは追加しません",
+          "材料温度とTPUの穏やかなチップ成形 - 材料別温度を使用し、TPUだけ計算済みの低速チップ成形、その他は純正動作を維持します"
+        ],
+        "ko": [
+          "순정 동작 언로드 청소 - 펌웨어의 순정 노즐 와이프를 한 번만 추가하며 압출, 리트랙션, 추가 퍼지, 거리, 속도, 팬 또는 재시도 시퀀스는 추가하지 않습니다",
+          "재질 온도와 TPU 저속 팁 포밍 - 재질별 온도를 사용하고 TPU만 계산된 저속 팁 포밍을 적용하며 다른 재질은 순정 동작을 유지합니다"
+        ],
+        "de": [
+          "Entladereinigung mit Serienbewegung - genau ein zusätzlicher Durchlauf der serienmäßigen Düsenreinigung; keine zusätzliche Extrusion, Retraktion, Spülbewegung, Distanz, Geschwindigkeit, Lüfter- oder Wiederholungssequenz",
+          "Materialtemperaturen plus schonende TPU-Spitzenformung - materialspezifische Temperaturen; nur TPU nutzt die berechnete langsamere Spitzenformung, alle anderen Materialien bleiben serienmäßig"
+        ],
+        "fr": [
+          "Nettoyage au déchargement avec mouvements d'origine - un seul passage supplémentaire de l'essuyage de buse d'origine ; aucune extrusion, rétraction, poussée de purge, distance, vitesse, ventilation ou séquence de nouvelle tentative ajoutée",
+          "Températures et formation douce de la pointe TPU - températures par matériau ; seul le TPU utilise la séquence ralentie calculée, les autres matériaux gardent les mouvements d'origine"
+        ],
+        "it": [
+          "Pulizia di scarico con movimenti stock - un solo passaggio aggiuntivo della pulizia ugello stock; nessuna estrusione, retrazione, spinta di purge, distanza, velocità, ventola o sequenza di ritentativo aggiunta",
+          "Temperature e formazione punta TPU delicata - temperature per materiale; solo il TPU usa la sequenza rallentata calcolata, gli altri materiali mantengono i movimenti stock"
+        ]
+      },
+      "readme": "ENHANCEMENTS_README.md",
+      "files": [
+        "filament-parameters",
+        "mnemonic3d-filament-temperatures"
+      ],
+      "requires": [],
+      "default_checked": true
+    },
+    {
+      "id": "tpu-ace-rollback-enhancement",
+      "title": "Material-Aware ACE Rollback Enhancement",
+      "description": "Optional material-aware ACE motion caps. TPU ACE transport and its small retry pull-back are capped at 20 mm/s. The sustained TPU toolhead seating pushes and 80 mm purge are capped at 120 mm/min (2 mm/s or 4.81 mm3/s). During TPU unload, the first 100 mm of the existing sensor-clearing retract is capped at 10 mm/s and the remainder at 20 mm/s. ASA and ABS unload are capped at 40 mm/s, and PETG-family unload is capped at 50 mm/s. A printer already configured slower is never sped up. The material is resolved from the actual loaded head/ACE/slot, so no toolhead or slot is hard-coded. Total distances, the stock 150 mm sensor-check point, retries and temperatures remain unchanged. Direct/manual and non-TPU load/purge speeds remain stock. No tip-form engine or table is supplied by this group.",
+      "items": [
+        "TPU ACE transport - maximum 20 mm/s, including the small load-retry pull-back",
+        "TPU toolhead seating + purge - maximum 120 mm/min (2 mm/s or 4.81 mm3/s)",
+        "TPU unload - first 100 mm maximum 10 mm/s, then maximum 20 mm/s",
+        "ASA and ABS unload - maximum 40 mm/s",
+        "PETG-family unload - maximum 50 mm/s",
+        "Safety - speed caps never increase a slower user setting and never change distances, sensors, retry counts or temperatures"
+      ],
+      "files": [
+        "ace-py-tpu-rollback",
+        "filament-feed-ace-tpu-rollback",
+        "filament-feed-ace-template-tpu-rollback",
+        "print-task-config-tpu-enhanced"
+      ],
+      "requires": [
+        "mnemonic3d-recommended-enhancements"
+      ],
+      "default_checked": false
+    },
+    {
+      "id": "mnemonic3d-calibrated-filaments",
+      "title": "Mnemonic3D Calibrated Filaments",
+      "description": "Optional catalog for the 15 Mnemonic3D U1 MultiACE filament profiles. Adds the Mnemonic3D vendor and profile-identifying material/subtype choices to the MultiACE web and Orca synchronization paths. IMPORTANT - touchscreen tradeoff: the stock touchscreen firmware hard-codes exactly three vendor tabs (Snapmaker, Polymaker, Generic) with no room for a fourth, so this enhancement puts Mnemonic3D on the touchscreen by overriding the Generic tab's own button and material list. Generic's real stock list is 24 materials (PLA, PETG, ABS, ASA, PA, PCTG, PVA, PLA Silk, PLA-CF, Support PLA, PETG HF, PETG-CF, PHA, TPU 90A/95A/95A HF, plus BVOH, EVA, HIPS, PA-CF, PC, PE, PE-CF); once this enhancement is installed, the Generic tab is relabeled Mnemonic3D and only 8 of those 24 are kept (BVOH, EVA, HIPS, PA-CF, PC, PE, PE-CF, PETG-CF) - the other 16, including plain Generic PLA/PETG/ABS/ASA, are no longer selectable by name on the touchscreen. Snapmaker (including its own separate Basic PLA) and Polymaker are untouched. This only overrides the touchscreen's Generic tab specifically - the web dashboard and Orca sync are unaffected and keep every existing vendor. Exact Mnemonic3D profiles map to the same-named identity, future PA-family profiles map to Mnemonic3D PA (except exact Easy PA), future PC-family profiles map to Generic PC, and hard ACE-compatible TPU for ACE maps only to its exact identity with the 68D, 230 C nozzle, 45 C bed and 1.26 g/cm3 baseline. It does not select a filament for any slot, replace saved slot colors, rewrite filament_parameters.json, or alter the printer's saved calibration values. The parameter catalog is applied in memory only while this optional enhancement is installed.",
+      "items": [
+        "PLA, PLA+, PLA HS and PLA Silk",
+        "PETG, PETG HS and PCTG",
+        "ASA, PA and Easy PA",
+        "PET-CF and PET-GF",
+        "TPU 90A, TPU 95A and hard 68D TPU for ACE",
+        "Touchscreen picker - OVERRIDES the Generic tab (relabeled Mnemonic3D): keeps only 8 of Generic's 24 stock rows (BVOH, EVA, HIPS, PA-CF, PC, PE, PE-CF, PETG-CF); Generic's plain PLA/PETG/ABS/ASA/etc. are removed from the touchscreen. Snapmaker and Polymaker tabs are not touched."
+      ],
+      "files": [
+        "filament-parameters",
+        "mnemonic3d-filament-catalog",
+        "touchscreen-gui-mnemonic3d"
+      ],
+      "requires": [],
+      "default_checked": false
+    },
+    {
+      "id": "panda-breath-gradual-warmup",
+      "title": "Panda Breath Gradual Warm-Up Boost",
+      "description": "Optional Panda Breath warm-up control. Chamber targets below 50 C are unchanged. Targets of 50, 55 and 60 C begin at 60, 65 and 70 C; higher requests remain capped at a 70 C device target. The boost tapers smoothly during the final 5 C and latches off after the requested temperature is reached so later dips do not reboost. Both heater templates retain a hard 70 C maximum.",
+      "items": [
+        "No boost below 50 C",
+        "10 C initial boost, capped at a 70 C device target",
+        "Smooth five-degree taper and no reboost after reaching target",
+        "Hard 70 C maximum in both auto and manual heater templates"
+      ],
+      "files": [
+        "panda-breath-helper",
+        "panda-breath-config",
+        "panda-breath-auto-config",
+        "panda-breath-manual-config"
+      ],
+      "requires": [],
+      "default_checked": false
+    },
+    {
+      "id": "mnemonic3d-dashboard-theme",
+      "title": "Mnemonic3D Dashboard Theme",
+      "description": "Optional visual reskin of the MultiACE web dashboard (Dashboard/Spools/Config tabs) to match Mnemonic3D's brand identity - teal and gold accents on a near-black background, Sora/Inter/IBM Plex Mono typography, and larger card corner radii. Purely a stylesheet and markup swap: every existing control, data binding, form field and behavior is unchanged. Ships as an alternate variant of the same two mandatory files (multiace-web-index / multiace-web-css) - Patches must already be installed, and this simply replaces its plain default look afterward. Requires the printer to reach Google Fonts over the internet for the exact typefaces; without internet access the theme's colors and layout still apply and text falls back to the browser's default UI font.",
+      "items": [
+        "Teal (#0087A8) and gold (#E0A04B) brand palette, applied via the existing CSS custom properties - no selector or layout rule changed",
+        "Sora display type for headers and card titles, IBM Plex Mono for section labels, Inter for body text",
+        "Larger, more consistent corner radii across cards, buttons and inputs",
+        "Fixes a pre-existing undefined --text CSS variable on the reboot button (fell back to inherited color; harmless, but incorrect)"
+      ],
+      "files": [
+        "multiace-web-index-theme",
+        "multiace-web-css-theme"
+      ],
+      "requires": [],
+      "default_checked": false
+    },
+    {
+      "id": "afc-panel-support",
+      "_moved_note": "MOVED HERE 2026-09-03 from patch_sources.json's orca-multiace-mandatory group. Originally combined into Mandatory on 2026-08-23 at the user's request, but AFC lane/panel display is not needed for the Orca Slicer MultiACE edition to function - the user identified it as a Feature, not a Mandatory requirement. Assumes Patches (orca-multiace-mandatory) is already installed.",
+      "title": "AFC Lane/Panel Display Support",
+      "description": "Adds AFC (Automatic Filament Changer) lane and unit support to the MultiACE dashboard and Mainsail: shows filament parked in an ACE bay instead of blanking it as \"detected, but not loaded\", hides lanes with nothing in them so the panel only lists bays that actually hold filament, adds MAINTENANCE_LOAD/MAINTENANCE_UNLOAD console macros for testing, and resizes Mainsail's AFC lane cards so they display correctly.",
+      "items": [
+        "Filament parked in an ACE bay shows correctly instead of \"detected, but not loaded\"",
+        "Empty lanes are hidden from the panel",
+        "MAINTENANCE_LOAD/MAINTENANCE_UNLOAD console macros for testing",
+        "Mainsail AFC lane card sizing fix"
+      ],
+      "files": [
+        "afc-lane",
+        "afc-unit",
+        "afc-cfg",
+        "mainsail-afc-css"
+      ],
+      "requires": [],
+      "default_checked": false
+    }
+  ],
+  "files": [
+    {
+      "id": "ace-py-tpu-rollback",
+      "remote": "/home/lava/klipper/klippy/extras/ace.py",
+      "description": "Optional material-aware speed caps layered on the same crash-safe occupied-head confirmation and strict load-verification controller. TPU ACE transport is capped at 20 mm/s; TPU unload uses the approved 10/20 mm/s speed stages, and ASA/ABS/PETG-family unload speeds are capped without changing any commanded distance. No route-learning, tube-calibration or 25 mm chunk controller is included.",
+      "source": "Firmware Source & Reference/Cross-Reference-Workspace/u1-patch-installer-src/sources/current/tpu-ace-rollback/ace.py",
+      "payload_path": "files/variants/home/lava/klipper/klippy/extras/ace.tpu-rollback.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/ace.py.0.99.8b-stock",
+        "Workspace Library/Experiments/scratch_afc/ace_v0998b_live.py",
+        "Workspace Library/Experiments/scratch_afc/ace_current_live.py",
+        "Workspace Library/Experiments/scratch_afc/ace_before_speed_fix.py",
+        "Workspace Library/Experiments/scratch_afc/ace_before_tswitch_fix.py"
+      ],
+      "_orphan_baseline_note": "2026-09-03: removed the 'sources/current/ace-py/ace.py' path from baselines above - that file was a stray duplicate of the Mandatory patch's authoritative ace.py, and had drifted out of sync (it still carried in-progress tube-calibration/load-route code that was pulled back out of the real Mandatory ace.py). Its hash is preserved below so any printer already sitting at that exact historical state is still recognized; the file itself was deleted since sources/current/ace-py is not this project's authoritative source location (see patch_sources.json's ace-py file entry).",
+      "extra_baseline_hashes": [
+        "8eed8ae7248a282485d2cf639560da204600ebc217cfb9f909b9b1051c36e8c4",
+        "2db372a0a687f28bd08a3a416e1edd8c64d6e3ee8961fb3264a4e0c714fc0728",
+        "6b9f239635b1afea97d6540e159443010f32e882f082f79822acee31c0c4efa5",
+        "ff92586e94ebee56a79c48723adf21b5d7c610ff6ff5ecc1125b442471e0409c",
+        "524120a2837b441423e27537e8c8817c5c7e07eb144c8d85c427be7880331c3b",
+        "6d4cedf2d2b3929e3bb8c64e028b0e08a6326d47682ffd69c65965b9f73d9a01"
+      ],
+      "variant_group": "ace-python",
+      "variant_priority": 100
+    },
+    {
+      "id": "filament-feed-ace-template-tpu-rollback",
+      "remote": "/home/lava/klipper/klippy/extras/filament_feed_ace.py",
+      "description": "TPU-enhanced authoritative ACE-mode boot template paired with the live filament_feed.py variant. S58multiace-mode copies this template into the live module on every boot; updating both preserves the TPU transport, seating and purge caps after a full power cycle.",
+      "source": "Firmware Source & Reference/Cross-Reference-Workspace/u1-patch-installer-src/sources/current/tpu-ace-rollback/filament_feed.py",
+      "payload_path": "files/variants/home/lava/klipper/klippy/extras/filament_feed_ace.tpu-rollback.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/current/filament-feed-ace/filament_feed_ace.py",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/tmp/extracted-1.5.2/rootfs/home/lava/klipper/klippy/extras/filament_feed.py"
+      ],
+      "extra_baseline_hashes": [
+        "123d20861be9dac76abbe23464d0dc6e9dcc1c6da873fe4ce69b95bba75a9cba",
+        "34a78bd8ee221e3a28b2b335640e4f1cb1b3eb0d54782ed53f423ceba8edbe1f"
+      ],
+      "variant_group": "filament-feed-template-python",
+      "variant_priority": 100
+    },
+    {
+      "id": "filament-feed-ace-tpu-rollback",
+      "remote": "/home/lava/klipper/klippy/extras/filament_feed.py",
+      "description": "Optional material-aware speed call sites using stock-distance ACE loading. TPU ACE transport is capped at 20 mm/s; once TPU is confirmed at the toolhead sensor, repeated phase-3 flow retries are skipped and one normal final purge remains. Direct/manual and non-TPU load/purge speeds remain stock.",
+      "source": "Firmware Source & Reference/Cross-Reference-Workspace/u1-patch-installer-src/sources/current/tpu-ace-rollback/filament_feed.py",
+      "payload_path": "files/variants/home/lava/klipper/klippy/extras/filament_feed.tpu-rollback.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/current/filament-feed-ace/filament_feed_ace.py",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/tmp/extracted-1.5.2/rootfs/home/lava/klipper/klippy/extras/filament_feed.py"
+      ],
+      "extra_baseline_hashes": [
+        "123d20861be9dac76abbe23464d0dc6e9dcc1c6da873fe4ce69b95bba75a9cba",
+        "34a78bd8ee221e3a28b2b335640e4f1cb1b3eb0d54782ed53f423ceba8edbe1f"
+      ],
+      "variant_group": "filament-feed-python",
+      "variant_priority": 100
+    },
+    {
+      "id": "filament-parameters",
+      "_added_note": "Stock 0.0.10 parameter table plus a guarded host for independent optional overlays. Overlay values are applied only in memory, so installing or removing an option does not rewrite the user's persisted filament_parameters.json.",
+      "remote": "/home/lava/klipper/klippy/extras/filament_parameters.py",
+      "description": "Filament parameters extension host - stock 0.0.10 material/vendor/subtype and flow table with guarded loaders for the separately selectable temperature and Mnemonic3D catalog modules. It never writes optional overlay values into the user's saved filament parameter file.",
+      "source": "Patch Installer (Main Project)/sources/current/filament-parameters/filament_parameters.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/filament_parameters.py.stock-0.0.10-refresh",
+        "Patch Installer (Main Project)/sources/backups/before-optional-mnemonic3d-catalog-20260825/filament_parameters.py"
+      ],
+      "extra_baseline_hashes": [
+        "d353a6d055155448b16cb4b16f19768ee86166c9aeb706dac7be06a1dcbc3770"
+      ],
+      "_baseline_note": "Stock 0.0.10 baseline confirmed from printer .33. The previous 0.0.11 temperature-only build is also accepted for a clean upgrade to the non-persistent overlay host."
+    },
+    {
+      "id": "mnemonic3d-filament-catalog",
+      "remote": "/home/lava/klipper/klippy/extras/mnemonic3d_filament_catalog.py",
+      "description": "Mnemonic3D calibrated-filament catalog - 15 default-off printer identities for Orca sync, including hard 68D TPU for ACE at 230 C nozzle, 45 C bed and 1.26 g/cm3 density; adds only Mnemonic3D material/subtype rows and preserves saved slots, colors, other vendors and persisted parameter settings.",
+      "source": "Patch Installer (Main Project)/sources/current/filament-parameters/mnemonic3d_filament_catalog.py",
+      "allow_create": true,
+      "baselines": []
+    },
+    {
+      "id": "mnemonic3d-filament-temperatures",
+      "remote": "/home/lava/klipper/klippy/extras/mnemonic3d_filament_temperatures.py",
+      "description": "Optional material temperature overlay - applies the approved per-family nozzle-wipe values in memory without rewriting the printer's saved filament parameters.",
+      "source": "Patch Installer (Main Project)/sources/current/filament-parameters/mnemonic3d_filament_temperatures.py",
+      "allow_create": true,
+      "baselines": []
+    },
+    {
+      "id": "multiace-web-app-js-tube-calibration",
+      "_excluded": true,
+      "_exclusion_reason": "Tube Length Calibration Wizard development remains in progress; excluded until explicit future approval.",
+      "remote": "/home/lava/multiace_web/frontend/app.js",
+      "description": "Optional guided Tube Length Calibration Wizard behavior and typed API client",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-route-learning-status/app.js",
+      "payload_path": "files/variants/home/lava/multiace_web/frontend/app.tube-calibration.js",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/app.js.0.99.8b-stock",
+        "Patch Installer (Main Project)/sources/current/multiace-web-frontend/app.js"
+      ],
+      "variant_group": "multiace-web-app-js",
+      "variant_priority": 100
+    },
+    {
+      "id": "multiace-web-css-tube-calibration",
+      "_excluded": true,
+      "_exclusion_reason": "Tube Length Calibration Wizard development remains in progress; excluded until explicit future approval.",
+      "remote": "/home/lava/multiace_web/frontend/style.css",
+      "description": "Optional guided Tube Length Calibration Wizard styles",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-route-learning-status/style.css",
+      "payload_path": "files/variants/home/lava/multiace_web/frontend/style.tube-calibration.css",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/style.css.0.99.8b-stock",
+        "Patch Installer (Main Project)/sources/current/multiace-web-frontend/style.css"
+      ],
+      "variant_group": "multiace-web-css",
+      "variant_priority": 100
+    },
+    {
+      "id": "multiace-web-i18n-de-tube-calibration",
+      "_excluded": true,
+      "_exclusion_reason": "Tube Length Calibration Wizard development remains in progress; excluded until explicit future approval.",
+      "remote": "/home/lava/multiace_web/i18n/de.json",
+      "description": "Optional German Tube Length Calibration Wizard text",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-route-learning-status/de.json",
+      "payload_path": "files/variants/home/lava/multiace_web/i18n/de.tube-calibration.json",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/de.json.0.99.8b-stock",
+        "Patch Installer (Main Project)/sources/current/multiace-web-i18n/de.json"
+      ],
+      "extra_baseline_hashes": [
+        "a8cb2c8f4c2ed8b6e362a62a3916ffcd9825a492a4fa957f4f3f2dad55bc19aa"
+      ],
+      "variant_group": "multiace-web-i18n-de",
+      "variant_priority": 100
+    },
+    {
+      "id": "multiace-web-i18n-en-tube-calibration",
+      "_excluded": true,
+      "_exclusion_reason": "Tube Length Calibration Wizard development remains in progress; excluded until explicit future approval.",
+      "remote": "/home/lava/multiace_web/i18n/en.json",
+      "description": "Optional English Tube Length Calibration Wizard text",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-route-learning-status/en.json",
+      "payload_path": "files/variants/home/lava/multiace_web/i18n/en.tube-calibration.json",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/en.json.0.99.8b-stock",
+        "Patch Installer (Main Project)/sources/current/multiace-web-i18n/en.json"
+      ],
+      "extra_baseline_hashes": [
+        "ec77c19734976259d537f1a457b221a3d31ec494ca1ff0526219a6848b2cb67a"
+      ],
+      "variant_group": "multiace-web-i18n-en",
+      "variant_priority": 100
+    },
+    {
+      "id": "multiace-web-index-tube-calibration",
+      "_excluded": true,
+      "_exclusion_reason": "Tube Length Calibration Wizard development remains in progress; excluded until explicit future approval.",
+      "remote": "/home/lava/multiace_web/frontend/index.html",
+      "description": "Optional guided Tube Length Calibration Wizard markup on the MultiACE Dashboard",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-route-learning-status/index.html",
+      "payload_path": "files/variants/home/lava/multiace_web/frontend/index.tube-calibration.html",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/index.html.0.99.8b-stock",
+        "Patch Installer (Main Project)/sources/current/multiace-web-frontend/index.html"
+      ],
+      "variant_group": "multiace-web-index",
+      "variant_priority": 100
+    },
+    {
+      "id": "panda-breath-auto-config",
+      "remote": "/usr/local/share/firmware-config/tweaks/klipper/panda_breath_heater_auto.cfg",
+      "description": "Panda Breath automatic heater template with hard max_temp 70.",
+      "source": "Patch Installer (Main Project)/sources/current/panda-breath-warmup/panda_breath_heater_auto.cfg",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/panda-breath-warmup/panda_breath_heater_auto.cfg.stock"
+      ]
+    },
+    {
+      "id": "panda-breath-config",
+      "remote": "/usr/local/share/firmware-config/tweaks/klipper/panda_breath.cfg",
+      "description": "Panda Breath defaults enabling the gradual warm-up curve and the 70 C device ceiling.",
+      "source": "Patch Installer (Main Project)/sources/current/panda-breath-warmup/panda_breath.cfg",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/panda-breath-warmup/panda_breath.cfg.stock"
+      ]
+    },
+    {
+      "id": "panda-breath-helper",
+      "remote": "/home/lava/klipper/klippy/extras/panda_breath.py",
+      "description": "Pinned Panda Breath helper with gradual warm-up boost, five-degree taper, completion latch and hard 70 C device ceiling.",
+      "source": "Patch Installer (Main Project)/sources/current/panda-breath-warmup/panda_breath.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/panda-breath-warmup/panda_breath.py.pinned"
+      ]
+    },
+    {
+      "id": "panda-breath-manual-config",
+      "remote": "/usr/local/share/firmware-config/tweaks/klipper/panda_breath_heater_manual.cfg",
+      "description": "Panda Breath manual heater template with hard max_temp 70.",
+      "source": "Patch Installer (Main Project)/sources/current/panda-breath-warmup/panda_breath_heater_manual.cfg",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/panda-breath-warmup/panda_breath_heater_manual.cfg.stock"
+      ]
+    },
+    {
+      "id": "print-task-config-tpu-enhanced",
+      "remote": "/home/lava/klipper/klippy/extras/print_task_config.py",
+      "description": "Optional Mnemonic3D material enhancement variant. Retains the dynamic ACE badge marker and additionally presents ACE-owned TPU 95A/95A HF as automatically unloadable on the touchscreen. Direct/manual TPU remains stock/manual and saved filament_soft values are not changed.",
+      "source": "Patch Installer (Main Project)/sources/current/tpu-ace-managed-badge-enhanced/print_task_config.py",
+      "payload_path": "files/variants/home/lava/klipper/klippy/extras/print_task_config.tpu-enhanced.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/print_task_config.py.1.5.2-stock",
+        "Patch Installer (Main Project)/sources/current/tpu-ace-managed-badge/print_task_config.py"
+      ],
+      "extra_baseline_hashes": [
+        "83c9a6614e4b6ff8d39c60b5cd9d458479126df0e6f687c95def9193141f539a",
+        "f830bcdd5c32c2847a6fbfb85775aeacf3a9454ce74eb91a8b4fac122aed5b68",
+        "54870034316e30587398ab7de9ec74c8ab9dead1f8bed0bbf98341dbd4522088",
+        "4101db5c83fe7d7ade96740a72fa3ea655294ae1c60d76ad32e2467849225c94"
+      ],
+      "variant_group": "print-task-config",
+      "variant_priority": 100
+    },
+    {
+      "id": "touchscreen-gui-mnemonic3d",
+      "remote": "/usr/bin/gui",
+      "description": "Optional verified 23-row touchscreen catalog: 15 alphabetically ordered Mnemonic3D identities plus the retained Generic BVOH, EVA, HIPS, PA-CF, PC, PE, PE-CF and PETG-CF identities in their existing order. Includes the dynamic white ACE badge on both the front dashboard tile and filament detail-page color circle, selected-ACE-head Cancel/Confirm warning and fail-closed auto-match barriers. The prompt asks the user to confirm the current filament; an occupied sensor with a missing or ambiguous recorded ACE source clears the unsaved target color, starts no filament motion, and directs the user to the MultiACE web picker to identify the loaded slot. Direct-feeder heads do not show an ACE warning. Snapmaker and Polymaker remain available. The badge preserves native color, tool number and touch behavior, and ACE, toolhead and slot selection remains dynamic in the existing MultiACE resolver.",
+      "source": "Patch Installer (Main Project)/sources/current/touchscreen-gui-mnemonic3d-ace-color-confirm-badge/gui",
+      "payload_path": "files/variants/usr/bin/gui.mnemonic3d",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/gui.1.5.2-stock",
+        "Patch Installer (Main Project)/sources/current/touchscreen-gui-mnemonic3d/gui",
+        "Patch Installer (Main Project)/sources/current/touchscreen-gui-ace-color-confirm/gui",
+        "Patch Installer (Main Project)/sources/current/touchscreen-gui-mnemonic3d-ace-color-confirm/gui",
+        "Patch Installer (Main Project)/sources/current/touchscreen-gui-ace-color-confirm-detail-badge/gui",
+        "Patch Installer (Main Project)/sources/current/touchscreen-gui-mnemonic3d-ace-color-confirm-detail-badge/gui",
+        "Patch Installer (Main Project)/sources/current/touchscreen-gui-ace-color-confirm-badge/gui"
+      ],
+      "extra_baseline_hashes": [
+        "5a9065881b8118c25a739d3efbf9fa156e4f548301f7a9eda8f497dde5d200ce",
+        "108630c2937de50c5f06b3e667266eb5c9d7892fb7d1b07e1563c1333ea23900",
+        "8db335ed4b5188577754dcb73cc11d2e4dd9b58fd1a1f6e1b02d84d48ea1b894",
+        "e6874f36ded48754f66f8bf39df9fc52489e6c00e254fa41bc208324709b2787",
+        "1c60e2bc2de6cd123a443920c78653531ec159e1791e884852bae7eb2248c892",
+        "94cae20fe26952f53977a952c222cba73442fcea5ef2c3a2173ac9323db6b5cc",
+        "a8b0e398de5ce7a42daf953fdf1d68e431f49f886fad390e66db80d4bc375016",
+        "1744b8868e360a0bd9f000b26564cdcefca0601ebc2b3605a8c9224421e02eee",
+        "571893e83fbaa7022c8a5ed7cd71bb36b587f93d40f8a46b4007237284c3b4ee"
+      ],
+      "variant_group": "touchscreen-gui",
+      "variant_priority": 100
+    },
+    {
+      "id": "multiace-web-index-theme",
+      "remote": "/home/lava/multiace_web/frontend/index.html",
+      "description": "multiACE dashboard markup - Mnemonic3D Dashboard Theme variant, adds Google Fonts links only, no structural or behavioral change from the mandatory index.html it replaces",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-frontend/index.theme.html",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/current/multiace-web-frontend/index.html"
+      ],
+      "variant_group": "multiace-web-index",
+      "variant_priority": 200
+    },
+    {
+      "id": "multiace-web-css-theme",
+      "remote": "/home/lava/multiace_web/frontend/style.css",
+      "description": "multiACE dashboard styles - Mnemonic3D Dashboard Theme variant, retheme only via the existing CSS custom properties (colors, radii, typography); no selector or layout rule changed from the mandatory style.css it replaces",
+      "source": "Patch Installer (Main Project)/sources/current/multiace-web-frontend/style.theme.css",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/current/multiace-web-frontend/style.css"
+      ],
+      "variant_group": "multiace-web-css",
+      "variant_priority": 200
+    },
+    {
+      "id": "afc-cfg",
+      "remote": "/home/lava/printer_data/config/extended/klipper/afc.cfg",
+      "description": "AFC Klipper config - MAINTENANCE_UNLOAD/MAINTENANCE_LOAD console macros; AFC_HOME_Z_FOR_LOAD and AFC_DOCK_TOOLHEAD_IF_IDLE disabled (commented out, not deleted) since neither has a live caller",
+      "source": "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/usr/local/share/firmware-config/tweaks/klipper/afc.cfg",
+      "_baseline_note_16lane": "ADDED 2026-08-23. .33 freshly reflashed to stock and re-verified - its live afc.cfg (16-lane Orca/MMU-style topology, stub SET_COLOR/SET_MATERIAL/LANE_UNLOAD macros, header credits Paxx12/Decay71/Mnemonic3D) was flagged UNEXPECTED because our only tracked baseline (afc.cfg.stock, 124 lines, simple 4-lane real macros) is stale - captured from an earlier pre-release multiACE build. Confirmed genuine via the actual firmware package on disk: U1 Firmware/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/firmware/U1_1.5.2-paxx12-21_multiACE0.99.6.2b_AFC-Lite-16lane-validated.bin - the filename itself confirms this 16-lane layout is the officially validated build, not a hand-edit. Our own 'source' file above (441 lines, MAINTENANCE_LOAD/UNLOAD macros added) is this SAME 16-lane base with our patch layered on top - confirmed by comparing bodies, not just headers.",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/afc.cfg.stock",
+        "Patch Installer (Main Project)/sources/baselines/afc.cfg.stock-16lane-validated",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/usr/local/share/firmware-config/tweaks/klipper/afc.cfg.pre-panel-completion-sync-20260820"
+      ],
+      "extra_baseline_hashes": [
+        "bb997ba613bcacef788cdd1977606621019a3c83946fd06322c6f249be8edb22"
+      ]
+    },
+    {
+      "id": "afc-lane",
+      "remote": "/home/lava/klipper/klippy/extras/AFC_lane.py",
+      "description": "AFC lane module - shows filament parked in an ACE bay (was blanking as \"detected, but not loaded\"), dynamic T-map, lane display fix, panel completion sync",
+      "source": "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/home/lava/klipper/klippy/extras/AFC_lane.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/AFC_lane.py.stock",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/home/lava/klipper/klippy/extras/AFC_lane.py.pre-dynamic-t-map-20260819",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/home/lava/klipper/klippy/extras/AFC_lane.py.pre-lane-display-fix-sync-20260820",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/home/lava/klipper/klippy/extras/AFC_lane.py.pre-panel-completion-sync-20260820"
+      ],
+      "extra_baseline_hashes": [
+        "07f07188483f1df5e96ba7350718e4c9dcaaa5537d893de0094c88981d0bf1d6"
+      ]
+    },
+    {
+      "id": "afc-unit",
+      "remote": "/home/lava/klipper/klippy/extras/AFC_unit.py",
+      "description": "AFC unit module - hides unused lanes so the panel only lists bays that actually hold filament",
+      "source": "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/home/lava/klipper/klippy/extras/AFC_unit.py",
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/AFC_unit.py.stock",
+        "Firmware Source & Reference/Snapmaker MultiACE Source/SnapmakerU1-Extended-Firmware/overlays/firmware-extended/31-feature-afc-lite/root/home/lava/klipper/klippy/extras/AFC_unit.py.pre-hide-empty-lanes-sync-20260820"
+      ]
+    },
+    {
+      "id": "mainsail-afc-css",
+      "_path_note": "Must REPLACE Mainsail's real stylesheet in place. The file is stock CSS plus two appended AFC grid rules, and Mainsail's index.html only ever loads /assets/index-CIsGge_F.css - writing to any other name means the rules never apply. Filename confirmed still index-CIsGge_F.css on 0.99.8b (checked over HTTP against the live printer). If a future Mainsail build changes that Vite hash, this entry must be repointed.",
+      "remote": "/home/lava/mainsail/assets/index-CIsGge_F.css",
+      "description": "Mainsail stylesheet - responsive AFC panel grid so lane cards size correctly",
+      "source": "Workspace Library/Experiments/scratch_afc/index-CIsGge_F-afc-responsive.css",
+      "optional": true,
+      "baselines": [
+        "Patch Installer (Main Project)/sources/baselines/index-CIsGge_F.css.0.99.8b-stock"
+      ]
+    }
+  ]
+}
