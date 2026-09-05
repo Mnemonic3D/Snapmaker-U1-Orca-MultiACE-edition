@@ -23,9 +23,9 @@ view.
 
 ### Printer-specific MultiACE controls and calibrated filaments
 
-The dedicated U1 Mnemonic3D MultiACE profile adds Auto Sync, 4 Head / All
-Colors views, manual filament synchronization, and a growing set of calibrated
-filament starting profiles. The calibration library is approximately 90%
+The dedicated U1 Mnemonic3D MultiACE profile adds 4 Head / All Colors views,
+manual filament synchronization, and a growing set of calibrated filament
+starting profiles. The calibration library is approximately 90%
 complete and remains under active development; users may adjust profiles for
 their spool, environment, nozzle, and machine.
 
@@ -49,14 +49,10 @@ their spool, environment, nozzle, and machine.
 * **4 Head View** — Displays only filament currently loaded in the four physical U1 toolheads.
 * **All Colors View** — Displays the complete available MultiACE filament inventory.
 * **View Mode Persistence** — Remembers the selected 4 Head / All Colors mode after restarting Orca.
-* **Auto Sync Control** — Adds an On/Off control for automatic MultiACE filament synchronization.
-* **Auto Sync Persistence** — Remembers the Auto Sync setting across Orca restarts.
-* **Safe Startup Sync Fix** — Waits for the selected printer and device connection before automatically syncing.
 * **System Preset Safety Fix** — Prevents generic system profiles from attempting live printer communication.
-* **Manual Sync Preservation** — Keeps the Sync Filaments button available whether Auto Sync is enabled or disabled.
 * **Filament Sync Persistence** — Saves synchronized filament selections so they survive an Orca restart.
 * **Variable Filament Count Patch** — Allows more than four logical filament choices while retaining four physical toolheads.
-* **Filament Header UI Patch** — Adds native Orca-style Auto Sync and 4 Head / All Colors controls.
+* **Filament Header UI Patch** — Adds native Orca-style 4 Head / All Colors controls.
 * **Filament Header Layout Fix** — Centers MultiACE controls and restores Sync Filaments to the right side.
 * **Sync Completion Dialog Fix** — Automatically closes the sync confirmation dialog after a short countdown.
 * **MultiACE Start G-code Patch** — Updates machine startup G-code for compatibility with PAXX and MultiACE.
