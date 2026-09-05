@@ -39,9 +39,9 @@
 
 ## Overview
 
-This custom **Orca Slicer MultiACE Edition by Mnemonic3D** adds dedicated Snapmaker U1 MultiACE support directly into OrcaSlicer. It introduces live MultiACE filament synchronization, support for more logical filament choices than the U1's four physical toolheads, **4 Head / All Colors** display modes, persistent **Auto Sync**, custom MultiACE printer and process profiles, MultiACE-aware start and filament-change G-code, and integration with the existing PAXX/MultiACE preflight and tool-mapping workflow.
+This custom **Orca Slicer MultiACE Edition by Mnemonic3D** adds dedicated Snapmaker U1 MultiACE support directly into OrcaSlicer. It introduces live MultiACE filament synchronization, support for more logical filament choices than the U1's four physical toolheads, **4 Head / All Colors** display modes, custom MultiACE printer and process profiles, MultiACE-aware start and filament-change G-code, and integration with the existing PAXX/MultiACE preflight and tool-mapping workflow.
 
-Additional work includes a Snapmaker-specific printer agent, live ACE slot and toolhead-state handling, safe startup synchronization, filament-state persistence, preservation of PAXX toolhead calibration and swap behavior, custom Mnemonic3D printer artwork, splash screen and Windows installer branding, and removal of the old local postprocessor dependency so the build can be distributed without hardcoded printer addresses or private local scripts.
+Additional work includes a Snapmaker-specific printer agent, live ACE slot and toolhead-state handling, filament-state persistence, preservation of PAXX toolhead calibration and swap behavior, custom Mnemonic3D printer artwork, splash screen and Windows installer branding, and removal of the old local postprocessor dependency so the build can be distributed without hardcoded printer addresses or private local scripts.
 
 
 ## Features
