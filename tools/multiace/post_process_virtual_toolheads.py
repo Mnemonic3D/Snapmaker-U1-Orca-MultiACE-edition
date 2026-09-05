@@ -481,6 +481,34 @@ def host_has_manual_head(host, port=80, path='/multiace/api/state', timeout=5.0)
         return False
     return any(th.get('manual') for th in (data.get('toolheads', []) or []))
 
+def normalize_material_identity(value):
+    """Comparison-only normalization for material identity matching.
+
+    Orca (any material family) can export a space-separated speed/finish
+    modifier in `filament_type` for a print/speed-tuned variant of the same
+    base polymer - e.g. "PLA HIGH SPEED", "PETG HIGH SPEED" - while the
+    printer's live slot data reports the bare base material ("PLA", "PETG").
+    Per the user's direction, Orca's own slicer profile/settings are the
+    authority on print settings; the printer/MultiACE preflight material
+    check should only confirm a compatible base polymer is loaded, not
+    require the exact same labeled tier. So the modifier after the first
+    space is stripped for matching purposes, for every material family -
+    same "strip after first space" rule already established for preset
+    lookup in PresetCollection::first_visible_idx_by_type()
+    (src/libslic3r/Preset.cpp).
+
+    Dash-separated types (e.g. "PA-CF", "PET-CF", "PETG-CF") are NOT
+    touched - those are genuinely different materials (fiber-filled,
+    different temps/nozzle wear), not a speed/finish tier of the same
+    polymer, and must still match exactly. The pre-existing 'tpu-ams' -> 'tpu'
+    alias (a naming difference, not a space-separated modifier) is preserved
+    unchanged."""
+    m = (value or '').strip().lower()
+    if m == 'tpu-ams':
+        return 'tpu'
+    base, sep, _modifier = m.partition(' ')
+    return base if sep else m
+
 def check_material_availability(filament_types, live_slots):
     """Pre-check before matching. Returns sorted list of materials that
     the slicer needs (per `filament_types`) but that aren't loaded in
@@ -489,13 +517,13 @@ def check_material_availability(filament_types, live_slots):
     even if individual colours fall back."""
     loaded = set()
     for s in live_slots or []:
-        m = (s.get('material') or '').strip().lower()
+        m = normalize_material_identity(s.get('material'))
         if m:
             loaded.add(m)
     required = set()
     if filament_types:
         for v in filament_types.values():
-            m = (v or '').strip().lower()
+            m = normalize_material_identity(v)
             if m:
                 required.add(m)
     return sorted(required - loaded)
@@ -621,7 +649,7 @@ def match_colors_to_slots(color_names, live_slots, num_heads=4,
     t_meta = {}
     for t in sorted(color_names.keys()):
         c = (color_names[t] or '').strip().lower().lstrip('#')
-        mat = (filament_types.get(t) or '').strip().lower()
+        mat = normalize_material_identity(filament_types.get(t))
         name, base, canon = _name_keys('#' + c) if c else ('', '', '')
         t_meta[t] = {
             'color': c, 'mat': mat,
@@ -636,7 +664,7 @@ def match_colors_to_slots(color_names, live_slots, num_heads=4,
         slot_meta.append({
             'slot':  s,
             'color': c,
-            'mat':   (s.get('material') or '').lower(),
+            'mat':   normalize_material_identity(s.get('material')),
             'name':  name, 'base': base, 'canon': canon,
             'rgb':   _hex_to_rgb(c) if c else None,
         })
@@ -821,10 +849,10 @@ def compute_head_mode_layout(slicer_colors, slicer_types, pinned_heads,
         c = (slicer_colors.get(t) or '').strip().lstrip('#').lower()
         if not c:
             continue
-        mat = (slicer_types.get(t) or '').strip().lower()
+        mat = normalize_material_identity(slicer_types.get(t))
         cands = []
         for head, p in pins.items():
-            pmat = (p.get('material') or '').strip().lower()
+            pmat = normalize_material_identity(p.get('material'))
             if mat and pmat and pmat != mat:
                 continue
             cands.append({'head': head,
@@ -1383,7 +1411,11 @@ def rewrite_head_mode_to_file(in_path, out_path, assignment, ace_head=None,
 
 def parse_filament_types(gcode):
     """Best-effort lookup table T-index -> material name (PLA, PETG, …).
-    Slicers emit `filament_type = PLA;PETG;PLA` similar to filament_colour."""
+    Slicers emit `filament_type = PLA;PETG;PLA` similar to filament_colour.
+    A value containing a space (e.g. a "HIGH SPEED" variant) is wrapped in
+    double quotes by Orca to survive the ';'/',' split - strip those quotes
+    here so downstream matching (normalize_material_identity) sees the real
+    value instead of a quote-contaminated one."""
     types = {}
     all_lines = gcode.splitlines()
     scan = all_lines[:300] + all_lines[-2000:]
@@ -1391,7 +1423,7 @@ def parse_filament_types(gcode):
         m = re.search(r';\s*filament[_ ]type\s*[:=]\s*(.+)', line, re.I)
         if m:
             for i, p in enumerate(re.split(r'[;,]', m.group(1))):
-                p = p.strip()
+                p = p.strip().strip('"').strip()
                 if p:
                     types[i] = p
             if types:
