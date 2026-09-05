@@ -1503,6 +1503,109 @@ def fix_toolchange_temperatures(gcode):
 
     return ''.join(lines), changes
 
+def fix_startup_initial_extruder(gcode):
+    """Corrects the machine start gcode's use of Orca's raw {initial_extruder}
+    placeholder (see the U1 Mnemonic3D MultiACE machine profile's
+    machine_start_gcode - every bare T and M10[49] T command in the
+    bed-leveling/nozzle-cleaning/homing sequence uses this one placeholder).
+    Orca resolves that placeholder BEFORE this script ever runs, to
+    whichever extruder Orca's own internal (pre-remap) tool assignment
+    considers first - which has no guaranteed relationship to the REAL
+    physical head this pipeline decides will actually be used first (only
+    known after live-lookup color-matching). Confirmed on a real print: the
+    entire startup sequence engaged and heated a physical head (T3) never
+    used anywhere in the print body (T0/T1 only), purely because Orca's raw
+    internal index happened to be 3 for that model.
+
+    Rewrites every bare T<old> select and M10[49] T<old> S<temp> command in
+    the PRE-section only (before the first "; Change Tool" marker) to
+    reference the real first-used physical head instead - correcting WHICH
+    nozzle gets moved to/heated. Does NOT insert or touch any ACE_SWAP_HEAD -
+    that mechanical swap is still deliberately left to inject_auto_load(),
+    unsafe before G28/homing; this only changes which nozzle's heater/motion
+    commands are issued, not when a physical filament swap happens.
+
+    The temperature of the LAST such command (the "heat to actual
+    first-layer temp" step, immediately before printing starts) is also
+    corrected to the real head's own nozzle_temperature_initial_layer, same
+    pattern as fix_toolchange_temperatures(). Earlier, intermediate staged-
+    cleaning temperatures (computed from the wrong extruder's profile, but
+    all well below full print temp either way) are deliberately left as
+    Orca computed them - precisely reproducing this machine profile's exact
+    per-stage offset formulas from the resulting gcode alone is unreliably
+    brittle, and the risk from an approximate cleaning-stage temperature is
+    far lower than engaging the wrong nozzle physically, which this
+    function does fully fix.
+
+    Returns (fixed_gcode, list_of_(line_no, old_val, new_val, kind)) where
+    kind is 'select' (bare T line), 'heat' (M10x T<old> S<temp>), or
+    'final_temp' (the last heat command's temperature corrected too)."""
+    split_re = re.compile(r'^;\s*Change Tool\s*\d+\s*->\s*Tool\s*\d+', re.MULTILINE)
+    m = split_re.search(gcode)
+    if m is None:
+        return gcode, []
+    pre, body = gcode[:m.start()], gcode[m.start():]
+
+    tc_re = re.compile(r'^T(\d+)\s*$', re.MULTILINE)
+    body_m = tc_re.search(body)
+    if body_m is None:
+        return gcode, []
+    real_head = int(body_m.group(1))
+
+    combined_re = re.compile(r'^T(\d+)\s*$|^M10[49] T(\d+)\b', re.MULTILINE)
+    pre_m = combined_re.search(pre)
+    if pre_m is None:
+        return gcode, []
+    old_head = int(pre_m.group(1) if pre_m.group(1) is not None else pre_m.group(2))
+
+    if old_head == real_head:
+        return gcode, []
+
+    nozzle_temp_initial = None
+    hm = re.search(r';\s*nozzle_temperature_initial_layer\s*=\s*(.+)', gcode)
+    if hm:
+        nozzle_temp_initial = []
+        for p in re.split(r'[;,]', hm.group(1)):
+            p = p.strip().strip('"')
+            try:
+                nozzle_temp_initial.append(int(p))
+            except ValueError:
+                nozzle_temp_initial.append(None)
+
+    pre_lines = pre.splitlines(keepends=True)
+    bare_re = re.compile(r'^T%d\s*$' % old_head)
+    heat_re = re.compile(r'^(M10[49] T)%d(\s+S)(\d+)(\s*.*)$' % old_head)
+
+    changes = []
+    last_heat_idx = None
+    for i, line in enumerate(pre_lines):
+        s = line.rstrip('\n')
+        if bare_re.match(s):
+            pre_lines[i] = 'T%d\n' % real_head
+            changes.append((i + 1, old_head, real_head, 'select'))
+            continue
+        mm = heat_re.match(s)
+        if mm:
+            pre_lines[i] = '%s%d%s%s%s\n' % (
+                mm.group(1), real_head, mm.group(2), mm.group(3), mm.group(4))
+            changes.append((i + 1, old_head, real_head, 'heat'))
+            last_heat_idx = i
+
+    if (last_heat_idx is not None and nozzle_temp_initial
+            and real_head < len(nozzle_temp_initial)
+            and nozzle_temp_initial[real_head] is not None):
+        s = pre_lines[last_heat_idx].rstrip('\n')
+        mm = re.match(r'^(M10[49] T)%d(\s+S)(\d+)(\s*.*)$' % real_head, s)
+        if mm:
+            correct_temp = nozzle_temp_initial[real_head]
+            old_temp = int(mm.group(3))
+            if old_temp != correct_temp:
+                pre_lines[last_heat_idx] = '%s%d%s%d%s\n' % (
+                    mm.group(1), real_head, mm.group(2), correct_temp, mm.group(4))
+                changes.append((last_heat_idx + 1, old_temp, correct_temp, 'final_temp'))
+
+    return ''.join(pre_lines) + body, changes
+
 def parse_filament_types(gcode):
     """Best-effort lookup table T-index -> material name (PLA, PETG, …).
     Slicers emit `filament_type = PLA;PETG;PLA` similar to filament_colour.
@@ -3703,6 +3806,21 @@ def main():
               'to match each head\'s configured nozzle_temperature' % len(temp_fix_changes))
         for line_no, t_num, old_temp, new_temp in temp_fix_changes:
             print('  line %d: T%d  %dC -> %dC' % (line_no, t_num, old_temp, new_temp))
+
+    gcode, startup_fix_changes = fix_startup_initial_extruder(gcode)
+    if startup_fix_changes:
+        select_count = sum(1 for c in startup_fix_changes if c[3] == 'select')
+        heat_count = sum(1 for c in startup_fix_changes if c[3] == 'heat')
+        print('Startup initial-extruder fix: bed-leveling/nozzle-cleaning/homing '
+              'was engaging T%d (Orca\'s raw pre-remap tool assignment), which '
+              'is never actually used in this print - corrected to the real '
+              'first head T%d (%d tool-select(s), %d heat command(s))' % (
+                  startup_fix_changes[0][1], startup_fix_changes[0][2],
+                  select_count, heat_count))
+        for line_no, old_val, new_val, kind in startup_fix_changes:
+            if kind == 'final_temp':
+                print('  line %d: first-layer heat temp corrected %dC -> %dC' % (
+                    line_no, old_val, new_val))
 
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(gcode)

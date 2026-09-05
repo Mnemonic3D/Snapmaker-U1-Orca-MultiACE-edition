@@ -9230,12 +9230,28 @@ void GUI_App::window_pos_center(wxTopLevelWindow *window)
 
 bool GUI_App::config_wizard_startup()
 {
-    if (!m_app_conf_exists || preset_bundle->printers.only_default_printers()) {
-        BOOST_LOG_TRIVIAL(info) << "run wizard...";
-        run_wizard(ConfigWizard::RR_DATA_EMPTY);
-        BOOST_LOG_TRIVIAL(info) << "finished run wizard";
-        return true;
-    } /*else if (get_app_config()->legacy_datadir()) {
+    // FIX (2026-09-05): this auto-launch is stock Orca's "pick your printer
+    // brand from the full vendor catalog" onboarding - meaningless on this
+    // fork, which only ever targets one printer (Snapmaker U1 MultiACE).
+    // It was also firing on every reinstall (preset_bundle->printers.
+    // only_default_printers() goes true whenever the printer selection
+    // resets), forcing a multi-minute wait through GuideFrame's serial scan
+    // of ~38 bundled vendor filament libraries this fork never uses, every
+    // single time - confirmed via a live log
+    // (Slic3r::GUI::GuideFrame::LoadProfileFamily/GetFilamentInfo churning
+    // through Volumic/Prusa/BBL/etc. for well over a minute). The manual
+    // Help > Setup Wizard menu item (GUI_App::ShowUserGuide) still opens
+    // the same GuideFrame on demand - only the forced auto-launch is
+    // disabled, so nothing is lost, just no longer forced on startup.
+    // Original stock-Orca trigger, permanently disabled per the fix note
+    // above (kept here, not deleted, so the condition this fork doesn't
+    // need is still visible if a future change ever needs it back):
+    //   if (!m_app_conf_exists || preset_bundle->printers.only_default_printers()) {
+    //       run_wizard(ConfigWizard::RR_DATA_EMPTY);
+    //       return true;
+    //   }
+    return false;
+    /*else if (get_app_config()->legacy_datadir()) {
         // Looks like user has legacy pre-vendorbundle data directory,
         // explain what this is and run the wizard
 
