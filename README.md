@@ -2,6 +2,8 @@
   <img src="Logo.png" alt="OrcaSlicer MultiACE Mnemonic 3D Edition" width="100%">
 </p>
 
+<h1 align="center">UPDATE RELEASED — 2026-09-04, 10:05 PM ET</h1>
+
 # Orca Slicer - MultiACE Edition by Mnemonic3D
 
 > **Compatibility Notice**
@@ -30,7 +32,7 @@
 
 ## Download
 
-**[Get the latest release](https://github.com/Mnemonic3D/Snapmaker-U1-Orca-MultiACE-edition/releases/latest)** — Orca Slicer - MultiACE Edition installer and the Mandatory Patch installer, both in one place. New here? Start with the [Installation Guide](docs/Installation-Guide.md).
+**[Get the latest release](https://github.com/Mnemonic3D/Snapmaker-U1-Orca-MultiACE-edition/releases/latest)** — Orca Slicer - MultiACE Edition installer and the Mandatory Patch installer, both in one place.
 
 ## Overview
 
