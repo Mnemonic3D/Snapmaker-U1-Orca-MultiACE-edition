@@ -2,7 +2,7 @@
   <img src="Logo.png" alt="OrcaSlicer MultiACE Mnemonic 3D Edition" width="100%">
 </p>
 
-<h1 align="center">UPDATE RELEASED — 2026-09-04, 10:47 PM ET</h1>
+<h1 align="center">UPDATE RELEASED — 2026-09-05, 11:00 AM ET</h1>
 
 # Orca Slicer - MultiACE Edition by Mnemonic3D
 
