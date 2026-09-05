@@ -1409,6 +1409,100 @@ def rewrite_head_mode_to_file(in_path, out_path, assignment, ace_head=None,
             pass
     return active, skipped
 
+def fix_toolchange_temperatures(gcode):
+    """Rewrites the bare M109 S<temp> line that immediately follows every
+    bare toolchange (T0, T1, ...) to that physical head's own configured
+    `nozzle_temperature` (from this gcode's own header comment array),
+    replacing whatever flush/purge temperature Orca's own wipe-tower logic
+    originally computed for the pre-remap tool assignment.
+
+    Root cause this corrects (confirmed against a real print, not guessed):
+    Orca computes each toolchange's flush temperature from the *original*
+    slicer extruder assignment, before this script ever remaps which
+    physical head/ACE-slot actually executes that toolchange. Once remapped,
+    the flush temperature no longer has any relationship to the material
+    actually about to be extruded - e.g. a head configured for "PETG HIGH
+    SPEED" (250C) was measured purging at 270C, a head configured for plain
+    PETG (245C) at 240C, on every single toolchange in the print.
+
+    Deliberately layout-agnostic: this does NOT look at ace_heads/feeder
+    assignment at all - it only needs "which T-number was just selected"
+    and that index's own value in the header's nozzle_temperature array, so
+    it is correct regardless of whether ACE is wired to T0, some other head,
+    or all of them (tested against synthetic gcode for every one of those
+    layouts, not just this project's own T0-only printer).
+
+    A real toolchange block has THREE bare temperature commands, not one -
+    confirmed by walking a full block start-to-end on the real print, not
+    assumed:
+      1. `M109 S<n>` right after the `T<n>` - the purge/flush temp (waits).
+      2. `M104 S<n>` ~30 lines later, inside "CP TOOLCHANGE LOAD" - settles
+         to what becomes the SUSTAINED print temp for the rest of that
+         head's active stretch, until the next swap. Same bug, same fix.
+      3. A THIRD `M104 S<n>` much later, inside the next block's own
+         "; Ramming start"/"; Retract(unload)" section (winding the
+         OUTGOING material down ahead of the *next* swap) - deliberately
+         NOT touched here. Its value didn't consistently match either the
+         current or the next head's configured temp in the real file, its
+         purpose (likely a preheat-ahead optimization) isn't fully
+         characterized, and getting it wrong risks fighting Orca's own
+         timing rather than fixing a real bug. Left alone on purpose - not
+         an oversight.
+
+    Narrow scope, intentional: only touches the first two bare `M109`/`M104`
+    lines after a bare `T<n>` toolchange, stopping at (not past) the next
+    "; Ramming start" boundary - does not touch `M104`/`M109 T<n> S<n>`
+    heater-preheat commands (a different, pre-print mechanism) or the third
+    occurrence described above, and does not change the purge volume/
+    wipe-tower gcode itself. Returns
+    (fixed_gcode, list_of_(line_no, t_num, old_temp, new_temp))."""
+    nozzle_temp = None
+    m = re.search(r';\s*nozzle_temperature(?! *_)\s*=\s*(.+)', gcode)
+    if m:
+        nozzle_temp = []
+        for p in re.split(r'[;,]', m.group(1)):
+            p = p.strip().strip('"')
+            try:
+                nozzle_temp.append(int(p))
+            except ValueError:
+                nozzle_temp.append(None)
+    if not nozzle_temp:
+        return gcode, []
+
+    lines = gcode.splitlines(keepends=True)
+    tc_re = re.compile(r'^T(\d+)\s*$')
+    temp_re = re.compile(r'^(M10[49] S)(\d+)(\s*.*)$')
+    ramming_re = re.compile(r'^;\s*Ramming start\s*$')
+    changes = []
+
+    for i, line in enumerate(lines):
+        m = tc_re.match(line.rstrip('\n'))
+        if not m:
+            continue
+        t_num = int(m.group(1))
+        if t_num >= len(nozzle_temp) or nozzle_temp[t_num] is None:
+            continue
+        correct_temp = nozzle_temp[t_num]
+        # Correct up to the first two bare M109/M104 temp-set lines after
+        # this toolchange (the purge temp, then the settle-to-print temp),
+        # stopping at the next block's own "Ramming start" boundary so we
+        # never touch the third, differently-purposed occurrence.
+        fixed_here = 0
+        for j in range(i + 1, min(i + 60, len(lines))):
+            if ramming_re.match(lines[j].rstrip('\n')):
+                break
+            mm = temp_re.match(lines[j].rstrip('\n'))
+            if mm:
+                old_temp = int(mm.group(2))
+                if old_temp != correct_temp:
+                    lines[j] = '%s%d%s\n' % (mm.group(1), correct_temp, mm.group(3))
+                    changes.append((j + 1, t_num, old_temp, correct_temp))
+                fixed_here += 1
+                if fixed_here >= 2:
+                    break
+
+    return ''.join(lines), changes
+
 def parse_filament_types(gcode):
     """Best-effort lookup table T-index -> material name (PLA, PETG, …).
     Slicers emit `filament_type = PLA;PETG;PLA` similar to filament_colour.
@@ -3602,6 +3696,13 @@ def main():
             initial_targets=initial_targets)
         if auto_load_count > 0:
             print('Auto-load: injected ACE_SWAP_HEAD for %d head(s) before first T command' % auto_load_count)
+
+    gcode, temp_fix_changes = fix_toolchange_temperatures(gcode)
+    if temp_fix_changes:
+        print('Toolchange temperature fix: corrected %d purge temperature(s) '
+              'to match each head\'s configured nozzle_temperature' % len(temp_fix_changes))
+        for line_no, t_num, old_temp, new_temp in temp_fix_changes:
+            print('  line %d: T%d  %dC -> %dC' % (line_no, t_num, old_temp, new_temp))
 
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(gcode)

@@ -61,4 +61,51 @@ std::pair<std::string, int> inject_auto_load(
     const std::set<int>& feeder_heads = {},
     const std::optional<std::map<int, std::pair<int, int>>>& initial_targets = std::nullopt);
 
+// One correction made by fix_toolchange_temperatures() below; line_no is
+// 1-indexed, matching the Python source's own reporting convention.
+struct TemperatureFix {
+    int line_no = 0;
+    int t_num = 0;
+    int old_temp = 0;
+    int new_temp = 0;
+};
+
+// Ported from post_process_virtual_toolheads.py's fix_toolchange_temperatures().
+// Rewrites the first two bare M109/M104 S<temp> lines following every bare
+// toolchange (T<n>) to that physical head's own configured
+// `nozzle_temperature` (read from this gcode's own header comment array),
+// replacing whatever flush/purge and settle temperature Orca's own
+// wipe-tower logic originally computed for the PRE-remap tool assignment.
+//
+// Root cause this corrects (confirmed against a real print, not guessed):
+// Orca computes each toolchange's temperatures from the *original* slicer
+// extruder assignment, before rewrite()/apply_head_mode_rewrite()/
+// inject_auto_load() above ever remap which physical head/ACE-slot actually
+// executes that toolchange. Once remapped, those baked-in temperatures no
+// longer relate to the material actually about to be extruded - e.g. a head
+// configured for "PETG HIGH SPEED" (250C) was measured purging at 270C, a
+// head configured for plain PETG (245C) at 240C, on every toolchange.
+//
+// Deliberately layout-agnostic: reads only the gcode's own header array,
+// never ace_heads/feeder assignment - correct regardless of ACE wiring
+// (verified against all 16 possible 4-head ACE-layout combinations, not
+// just this project's own T0-only printer).
+//
+// A real toolchange block has THREE bare temperature commands, not one:
+//   1. M109 S<n> right after T<n> - the purge/flush temp (waits). Fixed.
+//   2. M104 S<n> ~30 lines later, inside "; CP TOOLCHANGE LOAD" - settles to
+//      the SUSTAINED print temp until the next swap. Same bug, same fix.
+//   3. A THIRD M104 S<n> inside the NEXT block's own "; Ramming start"
+//      section (winding the outgoing material down ahead of the next swap) -
+//      deliberately NOT touched: its purpose isn't fully characterized and
+//      "fixing" it risks fighting Orca's own timing rather than correcting
+//      a confirmed bug. The search window below stops at (never crosses)
+//      the next "; Ramming start" boundary specifically to guarantee this
+//      third occurrence is never reached.
+//
+// Must run LAST, after every other rewrite/remap/inject_auto_load step -
+// mirrors main()'s own call order in the Python source exactly, since only
+// the FINAL bare T<n> in the gcode reflects the actually-executing head.
+std::pair<std::string, std::vector<TemperatureFix>> fix_toolchange_temperatures(const std::string& gcode);
+
 } } // namespace Slic3r::MultiACE

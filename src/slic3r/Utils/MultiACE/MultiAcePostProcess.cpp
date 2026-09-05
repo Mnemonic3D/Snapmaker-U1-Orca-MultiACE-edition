@@ -172,6 +172,15 @@ void run_multiace_postprocess(const std::string& gcode_path, const DynamicPrintC
     (void)auto_load_count;
     gcode = std::move(gcode_with_autoload);
 
+    // Must run LAST, after every rewrite/remap/auto-load step above - see
+    // fix_toolchange_temperatures()'s own doc comment. Mirrors the Python
+    // source's main() call order exactly: only the FINAL bare T<n> (after
+    // every swap this function performed) reflects the actually-executing
+    // head, so this has to see the fully-rewritten gcode, not the original.
+    auto [gcode_with_temp_fix, temp_fix_changes] = fix_toolchange_temperatures(gcode);
+    (void)temp_fix_changes;
+    gcode = std::move(gcode_with_temp_fix);
+
     boost::nowide::ofstream ofs(gcode_path.c_str(), std::ios::binary);
     if (!ofs)
         throw Slic3r::RuntimeError("MultiACE post-processing could not write the gcode file: " + gcode_path);

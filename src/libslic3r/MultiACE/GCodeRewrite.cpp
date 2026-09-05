@@ -10,6 +10,38 @@ namespace Slic3r { namespace MultiACE {
 
 namespace {
 
+// Python's int(), NOT std::stoi(): the entire (already-stripped) string must
+// be a valid integer literal or this returns nullopt. std::stoi() alone
+// would silently accept "250x" as 250 (stops at the first non-digit),
+// where Python's int("250x") raises ValueError - which the ported
+// fix_toolchange_temperatures() below treats as "value unknown for this T",
+// not "value is 250".
+std::optional<int> parse_int_strict(const std::string& s)
+{
+    if (s.empty())
+        return std::nullopt;
+    size_t i = (s[0] == '+' || s[0] == '-') ? 1 : 0;
+    if (i >= s.size())
+        return std::nullopt;
+    for (size_t j = i; j < s.size(); ++j)
+        if (!std::isdigit(static_cast<unsigned char>(s[j])))
+            return std::nullopt;
+    try {
+        return std::stoi(s);
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+// Repeatedly trims leading/trailing '"' characters - Python's str.strip('"').
+std::string strip_dquotes(std::string_view s)
+{
+    size_t b = 0, e = s.size();
+    while (b < e && s[b] == '"') ++b;
+    while (e > b && s[e - 1] == '"') --e;
+    return std::string(s.substr(b, e - b));
+}
+
 // Replaces every T4-T15 occurrence within a line with T(n%4) - the inner
 // substitution _fix_m104 applies to matched M104/M109 lines.
 std::string replace_high_t_refs_mod4(const std::string& line)
@@ -533,6 +565,71 @@ std::pair<std::string, int> inject_auto_load(
 
     // split_on_newline()+join_lines() round-trips exactly, no patch needed.
     return {join_lines(new_lines), static_cast<int>(initial.size())};
+}
+
+std::pair<std::string, std::vector<TemperatureFix>> fix_toolchange_temperatures(const std::string& gcode)
+{
+    // Whole-string search (not line-anchored, no MULTILINE-equivalent
+    // needed) - matches the Python source's re.search(pattern, gcode)
+    // exactly. The negative lookahead excludes
+    // "nozzle_temperature_initial_layer = ..." (and any other
+    // "nozzle_temperature_*" variant) from being mistaken for the plain
+    // per-head sustained-temp array this function actually needs.
+    static const std::regex hdr_re(R"(;\s*nozzle_temperature(?! *_)\s*=\s*(.+))");
+    std::vector<std::optional<int>> nozzle_temp;
+    std::smatch hm;
+    if (std::regex_search(gcode, hm, hdr_re)) {
+        std::string rest = hm[1].str();
+        size_t start = 0;
+        for (size_t i = 0; i <= rest.size(); ++i) {
+            if (i == rest.size() || rest[i] == ';' || rest[i] == ',') {
+                std::string piece(strip(rest.substr(start, i - start)));
+                piece = strip_dquotes(piece);
+                nozzle_temp.push_back(parse_int_strict(piece));
+                start = i + 1;
+            }
+        }
+    }
+    if (nozzle_temp.empty())
+        return {gcode, {}};
+
+    std::vector<std::string> lines = split_lines(gcode);
+    static const std::regex tc_re(R"(^T(\d+)\s*$)");
+    static const std::regex temp_re(R"(^(M10[49] S)(\d+)(\s*.*)$)");
+    static const std::regex ramming_re(R"(^;\s*Ramming start\s*$)");
+    std::vector<TemperatureFix> changes;
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        std::smatch m;
+        if (!std::regex_search(lines[i], m, tc_re))
+            continue;
+        int t_num = std::stoi(m[1].str());
+        if (static_cast<size_t>(t_num) >= nozzle_temp.size() || !nozzle_temp[t_num])
+            continue;
+        int correct_temp = *nozzle_temp[t_num];
+
+        // Correct up to the first two bare M109/M104 temp-set lines after
+        // this toolchange (the purge temp, then the settle-to-print temp),
+        // stopping at the next block's own "Ramming start" boundary so the
+        // third, differently-purposed occurrence is never touched.
+        int fixed_here = 0;
+        for (size_t j = i + 1; j < lines.size() && j < i + 60; ++j) {
+            if (std::regex_search(lines[j], ramming_re))
+                break;
+            std::smatch mm;
+            if (std::regex_search(lines[j], mm, temp_re)) {
+                int old_temp = std::stoi(mm[2].str());
+                if (old_temp != correct_temp) {
+                    lines[j] = mm[1].str() + std::to_string(correct_temp) + mm[3].str();
+                    changes.push_back({static_cast<int>(j) + 1, t_num, old_temp, correct_temp});
+                }
+                if (++fixed_here >= 2)
+                    break;
+            }
+        }
+    }
+
+    return {restore_trailing_newline(gcode, join_lines(lines)), changes};
 }
 
 } } // namespace Slic3r::MultiACE
