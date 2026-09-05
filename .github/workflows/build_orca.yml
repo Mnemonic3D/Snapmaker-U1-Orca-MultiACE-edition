@@ -342,11 +342,29 @@ jobs:
 
       # NSIS is x86-only; it runs (and the installer it emits runs) under ARM64's
       # x86 emulation, packaging the native arm64 payload from build-arm64.
+      #
+      # -B redirects CPack's staging/output directory (CPACK_PACKAGE_DIRECTORY)
+      # to a short path instead of the default (github.workspace's own build
+      # dir). This fork's checkout path is D:\a\<repo>\<repo>\... with the repo
+      # name appearing twice, and this repo's name (35 chars) is far longer
+      # than upstream's "OrcaSlicer" (10 chars) - combined with this project's
+      # own long, deeply-nested profile filenames (some 100+ chars on their
+      # own), the full staged path exceeds Windows' 260-char MAX_PATH and
+      # makensis.exe fails with "Problem compressing the directory" before it
+      # ever produces a real error message about which file. Confirmed by
+      # measuring the actual longest resource path: 281 chars against the
+      # default location here vs. 232 chars in a short local dev path (both
+      # under this same file tree, only the checkout root differs). Copying
+      # the result back into BUILD_DIR afterward keeps every downstream step
+      # (artifact upload, etc.) working against the same path it always has.
       - name: Create installer Win
         if: runner.os == 'Windows' && !vars.SELF_HOSTED
         working-directory: ${{ github.workspace }}/${{ env.BUILD_DIR }}
+        shell: pwsh
         run: |
-          cpack -G NSIS
+          New-Item -ItemType Directory -Force -Path C:\p | Out-Null
+          cpack -G NSIS -B C:\p
+          Copy-Item -Path C:\p\*.exe -Destination . -Force
 
       - name: Pack app
         if: runner.os == 'Windows'
@@ -372,7 +390,17 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: OrcaSlicer_Windows_${{ env.ver }}${{ env.ARCH_SUFFIX }}
-          path: ${{ github.workspace }}/${{ env.BUILD_DIR }}/OrcaSlicer*.exe
+          # This fork's CPACK_PACKAGE_FILE_NAME (see CMakeLists.txt) produces
+          # "Orca_Slicer_MultiACE_Edition_Windows_Installer_V*.exe" - an
+          # underscore right after "Orca" that the original "OrcaSlicer*.exe"
+          # glob (copied from upstream, whose package name has no underscore
+          # there) never matched, silently uploading nothing. Matching on
+          # "*Installer*.exe" catches this fork's actual name while staying
+          # name-agnostic like the original pattern intended, and still
+          # excludes the portable build and OrcaSlicer_profile_validator.exe
+          # (uploaded separately below), neither of which have "Installer" in
+          # their name.
+          path: ${{ github.workspace }}/${{ env.BUILD_DIR }}/*Installer*.exe
 
       - name: Upload artifacts Win PDB
         if: runner.os == 'Windows' && inputs.arch != 'arm64' && !vars.SELF_HOSTED
