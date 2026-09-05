@@ -30,9 +30,12 @@
        width="163">
 </a>
 
-## Download
+## Installation & Troubleshooting
 
-**[Get the latest release](https://github.com/Mnemonic3D/Snapmaker-U1-Orca-MultiACE-edition/releases/latest)** — Orca Slicer - MultiACE Edition installer and the Mandatory Patch installer, both in one place.
+- **[Installation Guide](docs/Installation-Guide.md)** — installing Orca Slicer - MultiACE Edition and the Mandatory Patch, start to finish
+- **[Troubleshooting Commons](docs/Troubleshooting-Commons.md)** — something on your printer looking off after a fresh flash? Most of it is expected, documented behavior
+
+---
 
 ## Overview
 
@@ -47,13 +50,6 @@ See the **[COMPLETE FEATURES PAGE](FEATURES.md)** for the MultiACE integration,
 live filament synchronization, logical-to-physical tool mapping, safety fixes,
 profiles, interface improvements, and Mnemonic3D branding included in this
 edition.
-
----
-
-## Installation & Troubleshooting
-
-- **[Installation Guide](docs/Installation-Guide.md)** — installing Orca Slicer - MultiACE Edition and the Mandatory Patch, start to finish
-- **[Troubleshooting Commons](docs/Troubleshooting-Commons.md)** — something on your printer looking off after a fresh flash? Most of it is expected, documented behavior
 
 ---
 
