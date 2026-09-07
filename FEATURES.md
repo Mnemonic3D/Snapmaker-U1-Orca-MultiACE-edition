@@ -3,6 +3,8 @@
 Orca Slicer - MultiACE Edition by Mnemonic3D adds dedicated Snapmaker U1
 MultiACE support directly to OrcaSlicer.
 
+![Orca MultiACE and native firmware rebuild direction](Logo.png)
+
 ## Feature highlights
 
 ### ACE filament management
