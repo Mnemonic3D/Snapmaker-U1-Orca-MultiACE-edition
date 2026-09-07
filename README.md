@@ -8,11 +8,9 @@
 
 # Orca Slicer - MultiACE Edition by Mnemonic3D
 
-> **Compatibility Notice**
+> **Development Status**
 >
-> This project is a **custom, reverse-engineered OrcaSlicer build** created to work with the existing Snapmaker U1, PAXX, and MultiACE firmware ecosystem. It does **not** replace, modify, maintain, or distribute those firmware projects.
->
-> **All firmware updates, fixes, releases, and firmware-related support must be obtained through their respective official GitHub repositories.** This project only provides the OrcaSlicer-side integration and compatibility layer.
+> The unified firmware and Orca rebuild is actively being developed and still requires hardware validation. The existing downloads should be treated as earlier experimental builds, not the finished integrated system described below.
 
 <div align="center">
   <a href="https://youtu.be/dXFPloWLsdc">
@@ -36,9 +34,15 @@
 
 ## Overview
 
-This custom **Orca Slicer MultiACE Edition by Mnemonic3D** adds dedicated Snapmaker U1 MultiACE support directly into OrcaSlicer. It introduces live MultiACE filament synchronization, support for more logical filament choices than the U1's four physical toolheads, **4 Head / All Colors** display modes, custom MultiACE printer and process profiles, MultiACE-aware start and filament-change G-code, and integration with the existing PAXX/MultiACE preflight and tool-mapping workflow.
+We are rebuilding the MultiACE experience as one unified system: a full firmware build for the Snapmaker U1 paired with an Orca build designed around the same tool, material, and safety model. The firmware will own physical ACE communication, tool routing, state recovery, and safe tool-change execution, while Orca will provide the matching printer setup, slicing workflow, and clear MultiACE controls.
 
-Additional work includes a Snapmaker-specific printer agent, live ACE slot and toolhead-state handling, filament-state persistence, preservation of PAXX toolhead calibration and swap behavior, custom Mnemonic3D printer artwork, splash screen and Windows installer branding, and removal of the old local postprocessor dependency so the build can be distributed without hardcoded printer addresses or private local scripts.
+### Why this direction
+
+The earlier approach depended on separate patches, preflight steps, add-ons, and translation layers. That split responsibility across too many moving parts and made failures harder to diagnose. Building the firmware and slicer around one shared contract should make setup simpler, tool changes more predictable, recovery safer, and the overall experience easier to use.
+
+### The goal
+
+Deliver a streamlined, user-friendly system where the ACE and Snapmaker U1 feel like they were designed and shipped together: no separate MultiACE preflight, no tool-change Z loss, no over-extrusion from mismatched tool state, and no add-on conflicts. Development will stay honest about what has been locally verified and what still requires real hardware validation.
 
 
 ## Features
