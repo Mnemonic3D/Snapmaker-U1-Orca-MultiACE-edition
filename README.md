@@ -2,7 +2,9 @@
   <img src="Logo.png" alt="OrcaSlicer MultiACE Mnemonic 3D Edition" width="100%">
 </p>
 
-<h1 align="center">LAUNCH DELAYED — fixing GitHub launch errors</h1>
+<h1 align="center">A New Direction</h1>
+
+<p align="center"><strong>I’m taking this project in a different direction. I’ve chosen to move forward with a full firmware build and shape Orca around it, so the ACE and Snapmaker U1 feel like they were designed and shipped together.</strong></p>
 
 # Orca Slicer - MultiACE Edition by Mnemonic3D
 
@@ -29,11 +31,6 @@
        alt="Buy Me a Coffee"
        width="163">
 </a>
-
-## Installation & Troubleshooting
-
-- **[Installation Guide](docs/Installation-Guide.md)** — installing Orca Slicer - MultiACE Edition and the Mandatory Patch, start to finish
-- **[Troubleshooting Commons](docs/Troubleshooting-Commons.md)** — something on your printer looking off after a fresh flash? Most of it is expected, documented behavior
 
 ---
 
